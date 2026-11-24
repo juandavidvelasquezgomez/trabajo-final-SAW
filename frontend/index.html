@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eventos académicos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header id="encabezado"></header>
+  <main>
+    <h1>Eventos académicos</h1>
+    <p class="sub">Conferencias, talleres, seminarios y capacitaciones abiertas a la comunidad.</p>
+    <form id="filtros" class="card filtros" style="padding:14px" novalidate>
+      <div class="campo"><label for="f-tipo">Tipo</label>
+        <select id="f-tipo" name="tipo">
+          <option value="">Todos</option>
+          <option value="conferencia">Conferencia</option>
+          <option value="taller">Taller</option>
+          <option value="seminario">Seminario</option>
+          <option value="capacitacion">Capacitación</option>
+        </select></div>
+      <div class="campo"><label for="f-desde">Desde</label><input type="date" id="f-desde" name="desde"></div>
+      <div class="campo"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta" name="hasta"></div>
+      <div style="align-self:end"><button class="btn" type="submit">Filtrar</button></div>
+    </form>
+    <div id="mensaje"></div>
+    <div id="lista" class="rejilla" aria-live="polite"></div>
+  </main>
+  <script type="module" src="js/catalogo.js"></script>
+</body>
+</html>
