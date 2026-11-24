@@ -239,8 +239,8 @@
     <div class="grid2">
       <div><label>Título *</label><input placeholder="Taller de Python"></div>
       <div><label>Tipo *</label><select><option>Conferencia</option><option>Taller</option><option>Seminario</option><option>Capacitación</option></select></div>
-      <div><label>Inicio *</label><input type="datetime-local"></div>
-      <div><label>Fin * (máx. 8 horas)</label><input type="datetime-local"></div>
+      <div><label>Inicio * <span class="nota">(desde ahora en adelante)</span></label><input type="datetime-local" id="ev-inicio"></div>
+      <div><label>Fin * <span class="nota">(máx. 8 horas después del inicio)</span></label><input type="datetime-local" id="ev-fin" disabled></div>
       <div><label>Lugar o enlace *</label><input placeholder="Aula 301"></div>
       <div><label>Cupo máximo *</label><input type="number" min="1" placeholder="30"></div>
       <div class="solo-coord" style="grid-column:1/-1"><label>Organizador responsable</label><select><option>Yo (coordinación)</option><option>Ana Torres</option><option>Carlos Ruiz</option></select></div>
@@ -281,7 +281,7 @@
 <!-- CONSOLIDADO -->
 <section class="pantalla" id="consolidado">
   <h1>Consolidado</h1>
-  <p class="sub">Eventos, inscripciones y asistencia de toda la institución.</p>
+  <p class="sub">Eventos, inscripciones y asistencia de toda la institución. Las fechas pasadas se pueden consultar como historial.</p>
   <div class="card filtros" style="padding:14px">
     <div class="campo"><label>Desde</label><input type="date"></div>
     <div class="campo"><label>Hasta</label><input type="date"></div>
@@ -331,6 +331,24 @@
   document.getElementById('todos').onclick=()=>{personas.forEach(p=>p[3]='p');pintar();};
   document.getElementById('momento').onclick=()=>{const f=document.getElementById('form-momento');f.style.display=f.style.display==='none'?'block':'none';};
   pintar();
+
+  // Crear evento: las fechas pasadas quedan deshabilitadas (solo se consultan como historial).
+  const dosCifras = n => String(n).padStart(2,'0');
+  const aLocal = d => `${d.getFullYear()}-${dosCifras(d.getMonth()+1)}-${dosCifras(d.getDate())}T${dosCifras(d.getHours())}:${dosCifras(d.getMinutes())}`;
+  const evInicio = document.getElementById('ev-inicio'), evFin = document.getElementById('ev-fin');
+  function limitesDeFechas(){
+    evInicio.min = aLocal(new Date());                       // nada anterior al momento actual
+    if(evInicio.value && evInicio.value < evInicio.min) evInicio.value = '';
+    if(!evInicio.value){ evFin.value=''; evFin.disabled=true; return; }
+    const ini = new Date(evInicio.value);
+    evFin.disabled = false;                                  // el fin se habilita al elegir el inicio
+    evFin.min = aLocal(new Date(ini.getTime() + 60*1000));
+    evFin.max = aLocal(new Date(ini.getTime() + 8*3600*1000));
+    if(evFin.value && (evFin.value < evFin.min || evFin.value > evFin.max)) evFin.value='';
+  }
+  evInicio.addEventListener('change', limitesDeFechas);
+  evInicio.addEventListener('focus', limitesDeFechas);       // refresca "ahora" si la página lleva rato abierta
+  limitesDeFechas();
 
   const rol = document.getElementById('rol');
   rol.onchange=()=>{document.body.dataset.rol=rol.value; irA(location.hash.slice(1)||'catalogo');};

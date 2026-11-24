@@ -94,6 +94,17 @@ def test_filtros(cliente, org, org2, coord, reloj):
     assert filtrado["totales"]["eventos"] == 1 and filtrado["totales"]["inscripciones_activas"] == 2   # totales respetan el filtro
 
 
+def test_las_fechas_pasadas_se_pueden_consultar_como_historial(cliente, org, org2, coord, reloj):
+    pasado, proximo, _ = preparar(cliente, org, org2, reloj)
+    assert instante(pasado["fin"]) < reloj()                                          # el evento ya terminó
+    dia = instante(pasado["inicio"]).date().isoformat()
+    historial = consolidado(cliente, coord["headers"], desde=dia, hasta=dia)
+    assert [e["id"] for e in historial["eventos"]] == [pasado["id"]]
+    assert historial["eventos"][0]["asistentes"] == 3 and historial["eventos"][0]["estado"] == "finalizado"
+    assert [e["id"] for e in cliente.get("/api/panel/eventos", headers=org["headers"], params={"estado": "finalizado"}).json()] == [pasado["id"]]
+    assert pasado["id"] not in [e["id"] for e in cliente.get("/api/eventos").json()]  # el catálogo público solo muestra lo próximo
+
+
 def test_filtros_invalidos(cliente, coord):
     for params in ({"desde": "10/12/2026"}, {"hasta": "2026-02-30"}, {"desde": "2026-12-31", "hasta": "2026-12-01"},
                    {"tipo": "fiesta"}, {"estado": "otro"}, {"organizador_id": 0}, {"organizador_id": "abc"}):

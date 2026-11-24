@@ -314,6 +314,12 @@ ASISTENCIA (personal)                          CONSOLIDADO (coordinación)
 4. Cuando el evento inicia, el organizador abre **asistencia**, marca a los presentes (o inscribe a alguien en el momento).
 5. La coordinación abre el **consolidado** y comprueba que cupo, inscritos y asistentes coinciden.
 
+### 7.4 Fechas en los formularios
+
+- **Crear o editar un evento:** los selectores de inicio y fin **deshabilitan las fechas y horas anteriores al momento actual**. El fin solo se habilita después de elegir el inicio, y admite como máximo 8 horas más.
+- **Fechas pasadas = historial:** solo se consultan. Los filtros del catálogo, del panel y del consolidado no tienen esa restricción, y los eventos finalizados siguen visibles para el personal.
+- **Es una ayuda de la interfaz, no la defensa:** un selector se puede saltar (escribiendo la fecha o llamando a la API directamente). La regla real la aplica el servidor (RN-09: `FECHA_EN_PASADO`, `DURACION_EXCEDIDA`).
+
 ## 8. Configuración y datos de prueba
 
 - **`.env`** (local, nunca se sube): `SECRET_KEY`, `DATABASE_PATH`. **`.env.example`** con valores de ejemplo sin secretos.
