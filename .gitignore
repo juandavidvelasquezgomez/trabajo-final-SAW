@@ -1,0 +1,25 @@
+﻿# Dependencias y compilados
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Secretos y configuración local
+.env
+.env.*
+!.env.example
+
+# Bases de datos locales
+*.sqlite
+*.sqlite3
+*.db
+
+# Sistema / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
