@@ -29,16 +29,16 @@ Registrar respuestas, acuerdos y pendientes. Estado: `Pendiente` / `Respondida` 
 ### 3.1 Eventos y publicación
 | # | Pregunta | Respuesta | Estado |
 |---|---|---|---|
-| E1 | ¿Qué datos debe tener un evento (título, descripción, tipo, fecha/hora, lugar o enlace, cupo, organizador)? ¿Cuáles son obligatorios? | | Pendiente |
-| E2 | ¿Qué tipos de actividad existen (conferencia, taller, seminario, capacitación)? ¿Es una lista fija? | | Pendiente |
-| E3 | ¿Qué estados tiene un evento (borrador, publicado, cancelado, finalizado)? ¿Quién cambia cada estado? | | Pendiente |
-| E4 | ¿Un evento publicado se puede editar o cancelar? ¿Qué pasa con las inscripciones si se cancela? | | Pendiente |
-| E5 | ¿Se permite crear eventos con fecha en el pasado? ¿Debe haber una duración máxima o validación de fechas? | | Pendiente |
+| E1 | ¿Qué datos debe tener un evento (título, descripción, tipo, fecha/hora, lugar o enlace, cupo, organizador)? ¿Cuáles son obligatorios? | Obligatorios: título, tipo, fecha/hora de inicio, fecha/hora de fin, lugar o enlace, cupo máximo, organizador. Opcionales: descripción, imagen. Automáticos: estado, fecha de creación. | Respondida |
+| E2 | ¿Qué tipos de actividad existen (conferencia, taller, seminario, capacitación)? ¿Es una lista fija? | Lista fija: conferencia, taller, seminario, capacitación (campo con valores permitidos, sin pantalla de administración). | Respondida |
+| E3 | ¿Qué estados tiene un evento (borrador, publicado, cancelado, finalizado)? ¿Quién cambia cada estado? | borrador (lo crea el organizador; solo él lo ve) -> publicado (organizador) -> cancelado (organizador). finalizado lo asigna el sistema al pasar la fecha de fin. | Respondida |
+| E4 | ¿Un evento publicado se puede editar o cancelar? ¿Qué pasa con las inscripciones si se cancela? | Editar un publicado: sí, sin bajar el cupo por debajo de los inscritos activos (RN-08) y no si está finalizado o cancelado. Cancelar: solo el organizador; las inscripciones se conservan con estado cancelada_por_evento. | Respondida |
+| E5 | ¿Se permite crear eventos con fecha en el pasado? ¿Debe haber una duración máxima o validación de fechas? | Inicio posterior al momento actual; fin posterior al inicio; duración máxima 8 horas (un evento de varios días se registra como actividades separadas). | Respondida |
 
 ### 3.2 Inscripción y cupos
 | # | Pregunta | Respuesta | Estado |
 |---|---|---|---|
-| I1 | ¿Quién puede inscribirse (solo estudiantes, docentes, externos)? ¿Se requiere registro/cuenta o basta con datos básicos? | | Pendiente |
+| I1 | ¿Quién puede inscribirse (solo estudiantes, docentes, externos)? ¿Se requiere registro/cuenta o basta con datos básicos? | Cualquier miembro de la comunidad (estudiante, docente o externo; el rol es un dato). Sin cuentas de participante: formulario de datos básicos sin contraseña. Organizador y coordinación acceden con rol. | Respondida |
 | I2 | ¿Qué datos del participante se piden (nombre, documento, correo, programa, rol)? | | Pendiente |
 | I3 | ¿Una persona puede inscribirse dos veces al mismo evento? ¿Cómo se identifica a la misma persona (correo, documento)? | | Pendiente |
 | I4 | ¿Se permite cancelar una inscripción? ¿Hasta cuándo? ¿Libera el cupo? | | Pendiente |
@@ -74,6 +74,7 @@ Registrar respuestas, acuerdos y pendientes. Estado: `Pendiente` / `Respondida` 
 | RN-06 | Solo participantes con inscripción activa pueden tener asistencia registrada. | [SUPUESTO] |
 | RN-07 | Solo el organizador del evento (o rol autorizado) puede editar, publicar, cancelar o registrar asistencia. | [SUPUESTO] |
 | RN-08 | El cupo de un evento con inscripciones no puede reducirse por debajo del número de inscritos activos. | [SUPUESTO] |
+| RN-09 | La fecha de inicio debe ser posterior al momento actual, la de fin posterior a la de inicio y la duración máxima es de 8 horas. | [SUPUESTO] |
 
 ## 5. Requisitos funcionales
 
@@ -155,6 +156,7 @@ Como coordinador, quiero ver un resumen de eventos, inscripciones y asistencia p
 
 | Fecha | Decisión / acuerdo | Fuente |
 |---|---|---|
+| 2026-11-23 | E1-E5 e I1 respondidas por el autor (sin sesión con el docente). Siguen siendo supuestos hasta que el docente los confirme. | Autor |
 | | *(se completa tras la entrevista)* | |
 
 **Pendiente de aprobación del docente:** alcance, reglas de negocio (sección 4) y prioridades (sección 5).
