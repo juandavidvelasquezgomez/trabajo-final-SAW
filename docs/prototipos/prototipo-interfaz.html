@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototipo de interfaz - Eventos académicos</title>
+<style>
+  :root{
+    --bg:#f5f6fa; --card:#fff; --texto:#0f172a; --suave:#64748b; --borde:#e2e8f0;
+    --primario:#1d4ed8; --primario-osc:#1e40af; --primario-claro:#dbeafe;
+    --ok:#15803d; --ok-bg:#dcfce7; --aviso:#b45309; --aviso-bg:#fef3c7; --error:#b91c1c; --error-bg:#fee2e2;
+    --radio:12px; --sombra:0 1px 2px rgba(15,23,42,.06),0 4px 12px rgba(15,23,42,.05);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--texto);line-height:1.5}
+  a{color:var(--primario);text-decoration:none}
+  header{background:var(--card);border-bottom:1px solid var(--borde);position:sticky;top:0;z-index:5}
+  .barra{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .logo{font-weight:700;font-size:1.1rem;color:var(--primario);margin-right:auto}
+  nav{display:flex;gap:4px;flex-wrap:wrap}
+  nav a{padding:8px 12px;border-radius:8px;color:var(--suave);font-weight:500}
+  nav a:hover,nav a.activo{background:var(--primario-claro);color:var(--primario-osc)}
+  .solo-personal{display:none}
+  body[data-rol="organizador"] .solo-personal,body[data-rol="coordinacion"] .solo-personal{display:inline-block}
+  body[data-rol="organizador"] .solo-coord{display:none}
+  .solo-coord{display:none}
+  body[data-rol="coordinacion"] .solo-coord{display:inline-block}
+  body[data-rol="participante"] .solo-sesion{display:none}
+  body[data-rol="coordinacion"] td.solo-coord,body[data-rol="coordinacion"] th.solo-coord{display:table-cell}
+  .demo{background:#0f172a;color:#cbd5e1;font-size:.85rem}
+  .demo .barra{padding:8px 16px}
+  .demo select{background:#1e293b;color:#fff;border:1px solid #334155;border-radius:6px;padding:4px 8px}
+  main{max-width:1080px;margin:0 auto;padding:24px 16px 64px}
+  section.pantalla{display:none}
+  section.pantalla.visible{display:block}
+  h1{font-size:1.6rem;margin:0 0 4px}
+  .sub{color:var(--suave);margin:0 0 20px}
+  .card{background:var(--card);border:1px solid var(--borde);border-radius:var(--radio);box-shadow:var(--sombra);padding:20px}
+  .filtros{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  label{display:block;font-size:.85rem;font-weight:600;margin-bottom:4px}
+  input,select,textarea{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font:inherit;background:#fff}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid #93c5fd;outline-offset:1px}
+  .campo{flex:1;min-width:150px}
+  .btn{display:inline-block;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;background:var(--primario);color:#fff}
+  .btn:hover{background:var(--primario-osc)}
+  .btn.sec{background:#fff;color:var(--texto);border:1px solid #cbd5e1}
+  .btn.sec:hover{background:#f1f5f9}
+  .btn.peligro{background:#fff;color:var(--error);border:1px solid #fecaca}
+  .btn.peligro:hover{background:var(--error-bg)}
+  .btn.peq{padding:6px 10px;font-size:.85rem}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+  .evento h3{margin:8px 0 4px;font-size:1.1rem}
+  .meta{color:var(--suave);font-size:.9rem;margin:2px 0}
+  .chip{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78rem;font-weight:600}
+  .chip.tipo{background:var(--primario-claro);color:var(--primario-osc)}
+  .chip.ok{background:var(--ok-bg);color:var(--ok)}
+  .chip.aviso{background:var(--aviso-bg);color:var(--aviso)}
+  .chip.error{background:var(--error-bg);color:var(--error)}
+  .chip.gris{background:#e2e8f0;color:#334155}
+  .barra-cupo{height:8px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin:10px 0 4px}
+  .barra-cupo span{display:block;height:100%;background:var(--primario)}
+  .barra-cupo.lleno span{background:var(--error)}
+  .barra-cupo.casi span{background:var(--aviso)}
+  .fila{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .dos{display:grid;grid-template-columns:1.2fr 1fr;gap:20px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .alerta{border-radius:8px;padding:10px 14px;font-size:.92rem;margin-top:12px;border:1px solid}
+  .alerta.ok{background:var(--ok-bg);color:#14532d;border-color:#86efac}
+  .alerta.error{background:var(--error-bg);color:#7f1d1d;border-color:#fca5a5}
+  .alerta.aviso{background:var(--aviso-bg);color:#78350f;border-color:#fcd34d}
+  .tabla-envoltura{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--borde);white-space:nowrap}
+  th{font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--suave)}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+  .kpi .num{font-size:1.9rem;font-weight:700}
+  .kpi .eti{color:var(--suave);font-size:.85rem}
+  .acciones{display:flex;gap:6px;flex-wrap:wrap}
+  .seg{display:inline-flex;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden}
+  .seg button{border:0;background:#fff;padding:6px 12px;font:inherit;cursor:pointer}
+  .seg button.on.pres{background:var(--ok);color:#fff}
+  .seg button.on.aus{background:var(--error);color:#fff}
+  .login{max-width:400px;margin:24px auto}
+  .nota{font-size:.82rem;color:var(--suave);margin-top:8px}
+  .banner{background:var(--primario-claro);color:var(--primario-osc);border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:.92rem}
+  @media (max-width:760px){.dos{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body data-rol="participante">
+
+<div class="demo"><div class="barra">
+  <strong>PROTOTIPO</strong> · datos de ejemplo, no son reales ·
+  <label style="display:inline;margin:0;font-weight:400">Ver como:
+    <select id="rol">
+      <option value="participante">Participante (sin sesión)</option>
+      <option value="organizador">Organizador</option>
+      <option value="coordinacion">Coordinación</option>
+    </select>
+  </label>
+</div></div>
+
+<header><div class="barra">
+  <span class="logo">Eventos Académicos</span>
+  <nav>
+    <a href="#catalogo" data-p="catalogo">Catálogo</a>
+    <a href="#panel" data-p="panel" class="solo-personal">Panel</a>
+    <a href="#asistencia" data-p="asistencia" class="solo-personal">Asistencia</a>
+    <a href="#consolidado" data-p="consolidado" class="solo-coord">Consolidado</a>
+    <a href="#login" data-p="login" class="solo-part">Ingresar</a>
+  </nav>
+</div></header>
+
+<main>
+
+<!-- CATÁLOGO -->
+<section class="pantalla" id="catalogo">
+  <h1>Eventos académicos</h1>
+  <p class="sub">Conferencias, talleres, seminarios y capacitaciones abiertas a la comunidad.</p>
+  <div class="card filtros" style="padding:14px">
+    <div class="campo"><label>Tipo</label><select><option>Todos</option><option>Conferencia</option><option>Taller</option><option>Seminario</option><option>Capacitación</option></select></div>
+    <div class="campo"><label>Desde</label><input type="date"></div>
+    <div class="campo"><label>Hasta</label><input type="date"></div>
+    <div style="align-self:end"><button class="btn">Filtrar</button></div>
+  </div>
+  <div class="rejilla">
+    <article class="card evento">
+      <span class="chip tipo">Taller</span> <span class="chip ok">Cupos disponibles</span>
+      <h3>Taller de Python</h3>
+      <p class="meta">Jue 10 dic 2026 · 2:00 p. m. – 5:00 p. m.</p>
+      <p class="meta">Aula 301</p>
+      <div class="barra-cupo"><span style="width:60%"></span></div>
+      <p class="meta">18 inscritos · <strong>12 cupos</strong> de 30</p>
+      <p style="margin:12px 0 0"><a class="btn peq" href="#detalle">Ver detalle</a></p>
+    </article>
+    <article class="card evento">
+      <span class="chip tipo">Seminario</span> <span class="chip aviso">Últimos cupos</span>
+      <h3>Seminario de Bases de Datos</h3>
+      <p class="meta">Vie 11 dic 2026 · 9:00 a. m. – 12:00 m.</p>
+      <p class="meta">Sala de cómputo B</p>
+      <div class="barra-cupo casi"><span style="width:90%"></span></div>
+      <p class="meta">27 inscritos · <strong>3 cupos</strong> de 30</p>
+      <p style="margin:12px 0 0"><a class="btn peq" href="#detalle">Ver detalle</a></p>
+    </article>
+    <article class="card evento">
+      <span class="chip tipo">Conferencia</span> <span class="chip error">Agotado</span>
+      <h3>Charla: Inteligencia Artificial</h3>
+      <p class="meta">Sáb 12 dic 2026 · 10:00 a. m. – 12:00 m.</p>
+      <p class="meta">Auditorio principal</p>
+      <div class="barra-cupo lleno"><span style="width:100%"></span></div>
+      <p class="meta">80 inscritos · <strong>0 cupos</strong> de 80</p>
+      <p style="margin:12px 0 0"><a class="btn sec peq" href="#detalle">Ver detalle</a></p>
+    </article>
+  </div>
+</section>
+
+<!-- DETALLE -->
+<section class="pantalla" id="detalle">
+  <p><a href="#catalogo">← Volver al catálogo</a></p>
+  <div class="dos">
+    <div class="card">
+      <span class="chip tipo">Taller</span> <span class="chip ok">Cupos disponibles</span>
+      <h1 style="margin-top:8px">Taller de Python</h1>
+      <p class="meta">Jueves 10 de diciembre de 2026 · 2:00 p. m. – 5:00 p. m. (hora de Colombia)</p>
+      <p class="meta">Aula 301 · Organiza: Ana Torres</p>
+      <div class="barra-cupo"><span style="width:60%"></span></div>
+      <p class="meta"><strong>12 cupos disponibles</strong> de 30</p>
+      <p>Introducción práctica a Python: variables, funciones y consumo de una API. Trae tu portátil.</p>
+    </div>
+    <div>
+      <div class="card">
+        <h2 style="margin-top:0;font-size:1.15rem">Inscríbete</h2>
+        <div style="display:grid;gap:12px">
+          <div><label>Nombre completo</label><input placeholder="Laura Gómez"></div>
+          <div><label>Correo electrónico</label><input type="email" placeholder="laura@ejemplo.test"></div>
+          <div class="grid2">
+            <div><label>Documento</label><input placeholder="1000000001"></div>
+            <div><label>Rol</label><select><option>Estudiante</option><option>Docente</option><option>Externo</option></select></div>
+          </div>
+          <div><label>Programa académico (opcional)</label><input placeholder="Desarrollo de Software"></div>
+          <button class="btn">Inscribirme</button>
+        </div>
+        <p class="nota">No necesitas crear una cuenta. Tus datos se usan solo para esta actividad.</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2 style="margin-top:0;font-size:1.05rem">¿Ya te inscribiste? Cancela tu inscripción</h2>
+        <div class="grid2">
+          <div><label>Correo</label><input type="email"></div>
+          <div><label>Documento</label><input></div>
+        </div>
+        <p style="margin:12px 0 0"><button class="btn peligro">Cancelar mi inscripción</button></p>
+      </div>
+    </div>
+  </div>
+  <h2 style="font-size:1.05rem;margin-top:28px">Mensajes del sistema (ejemplos)</h2>
+  <div class="alerta ok">Inscripción confirmada. Quedan 11 cupos.</div>
+  <div class="alerta error">El evento no tiene cupos disponibles.</div>
+  <div class="alerta error">Ya tienes una inscripción activa en este evento.</div>
+  <div class="alerta aviso">Este evento se cruza con "Seminario de Bases de Datos" (11 dic, 9:00 a. m.).</div>
+</section>
+
+<!-- LOGIN -->
+<section class="pantalla" id="login">
+  <div class="card login">
+    <h1>Ingresar</h1>
+    <p class="sub">Acceso para organizadores y coordinación.</p>
+    <div style="display:grid;gap:12px">
+      <div><label>Correo</label><input type="email" placeholder="organizador@ejemplo.test"></div>
+      <div><label>Contraseña</label><input type="password"></div>
+      <button class="btn">Ingresar</button>
+    </div>
+    <div class="alerta error">Correo o contraseña incorrectos.</div>
+    <p class="nota">La sesión vence todos los días a las 00:00 (hora de Colombia).</p>
+  </div>
+</section>
+
+<!-- PANEL -->
+<section class="pantalla" id="panel">
+  <div class="fila"><div><h1>Panel de eventos</h1>
+    <p class="sub"><span class="solo-coord">Todos los eventos de la institución.</span> Tus eventos y su estado.</p></div>
+    <button class="btn">+ Nuevo evento</button></div>
+  <div class="card tabla-envoltura" style="padding:0">
+    <table>
+      <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Inscritos</th><th class="solo-coord">Organizador</th><th>Acciones</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Taller de Python</strong><br><span class="meta">Taller</span></td><td>10 dic · 2:00 p. m.</td><td><span class="chip ok">Publicado</span></td><td>18 / 30</td><td class="solo-coord">Ana Torres</td>
+          <td class="acciones"><button class="btn sec peq">Editar</button><a class="btn peq" href="#asistencia">Asistencia</a><button class="btn peligro peq">Cancelar</button></td></tr>
+        <tr><td><strong>Taller de Git y GitHub</strong><br><span class="meta">Taller</span></td><td>15 dic · 8:00 a. m.</td><td><span class="chip gris">Borrador</span></td><td>0 / 25</td><td class="solo-coord">Ana Torres</td>
+          <td class="acciones"><button class="btn sec peq">Editar</button><button class="btn peq">Publicar</button></td></tr>
+        <tr><td><strong>Seminario de Bases de Datos</strong><br><span class="meta">Seminario</span></td><td>11 dic · 9:00 a. m.</td><td><span class="chip ok">Publicado</span></td><td>27 / 30</td><td class="solo-coord">Carlos Ruiz</td>
+          <td class="acciones"><button class="btn sec peq">Editar</button><a class="btn peq" href="#asistencia">Asistencia</a><button class="btn peligro peq">Cancelar</button></td></tr>
+        <tr><td><strong>Taller de HTML</strong><br><span class="meta">Taller</span></td><td>2 dic · 3:00 p. m.</td><td><span class="chip gris">Finalizado</span></td><td>20 / 20</td><td class="solo-coord">Carlos Ruiz</td>
+          <td class="acciones"><a class="btn sec peq" href="#asistencia">Ver asistencia</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <h2 style="font-size:1.15rem;margin-top:28px">Nuevo evento</h2>
+  <div class="card">
+    <div class="grid2">
+      <div><label>Título *</label><input placeholder="Taller de Python"></div>
+      <div><label>Tipo *</label><select><option>Conferencia</option><option>Taller</option><option>Seminario</option><option>Capacitación</option></select></div>
+      <div><label>Inicio *</label><input type="datetime-local"></div>
+      <div><label>Fin * (máx. 8 horas)</label><input type="datetime-local"></div>
+      <div><label>Lugar o enlace *</label><input placeholder="Aula 301"></div>
+      <div><label>Cupo máximo *</label><input type="number" min="1" placeholder="30"></div>
+      <div class="solo-coord" style="grid-column:1/-1"><label>Organizador responsable</label><select><option>Yo (coordinación)</option><option>Ana Torres</option><option>Carlos Ruiz</option></select></div>
+      <div style="grid-column:1/-1"><label>Descripción</label><textarea rows="3"></textarea></div>
+    </div>
+    <p style="margin:16px 0 0" class="acciones"><button class="btn">Guardar borrador</button><button class="btn sec">Guardar y publicar</button></p>
+    <div class="alerta error">La duración máxima de un evento es de 8 horas.</div>
+  </div>
+</section>
+
+<!-- ASISTENCIA -->
+<section class="pantalla" id="asistencia">
+  <p><a href="#panel">← Volver al panel</a></p>
+  <h1>Taller de Python — Asistencia</h1>
+  <p class="sub">Aula 301 · 10 dic 2026 · 2:00 p. m. – 5:00 p. m.</p>
+  <div class="banner">Registro abierto hasta las <strong>7:00 p. m.</strong> · Corrección posible hasta el día siguiente a las 5:00 p. m.</div>
+  <div class="fila" style="margin-bottom:12px">
+    <span class="meta" id="resumen"></span>
+    <span class="acciones"><button class="btn sec" id="todos">Marcar todos presentes</button><button class="btn" id="momento">+ Inscribir en el momento</button></span>
+  </div>
+  <div class="card tabla-envoltura" style="padding:0">
+    <table>
+      <thead><tr><th>Participante</th><th>Correo</th><th>Rol</th><th>Asistencia</th></tr></thead>
+      <tbody id="lista"></tbody>
+    </table>
+  </div>
+  <div id="form-momento" class="card" style="margin-top:16px;display:none">
+    <h2 style="margin-top:0;font-size:1.05rem">Inscribir en el momento</h2>
+    <div class="grid2">
+      <div><label>Nombre completo</label><input></div><div><label>Correo</label><input type="email"></div>
+      <div><label>Documento</label><input></div><div><label>Rol</label><select><option>Estudiante</option><option>Docente</option><option>Externo</option></select></div>
+    </div>
+    <p style="margin:12px 0 0"><button class="btn">Inscribir y marcar presente</button></p>
+    <div class="alerta aviso">Solo hay 12 cupos. Se aplican las mismas reglas de cupo, duplicados y cruce de horarios.</div>
+  </div>
+</section>
+
+<!-- CONSOLIDADO -->
+<section class="pantalla" id="consolidado">
+  <h1>Consolidado</h1>
+  <p class="sub">Eventos, inscripciones y asistencia de toda la institución.</p>
+  <div class="card filtros" style="padding:14px">
+    <div class="campo"><label>Desde</label><input type="date"></div>
+    <div class="campo"><label>Hasta</label><input type="date"></div>
+    <div class="campo"><label>Tipo</label><select><option>Todos</option><option>Taller</option><option>Seminario</option></select></div>
+    <div class="campo"><label>Estado</label><select><option>Todos</option><option>Publicado</option><option>Finalizado</option><option>Cancelado</option></select></div>
+    <div class="campo"><label>Organizador</label><select><option>Todos</option><option>Ana Torres</option><option>Carlos Ruiz</option></select></div>
+    <div style="align-self:end"><button class="btn">Aplicar</button></div>
+  </div>
+  <div class="kpis">
+    <div class="card kpi"><div class="num">8</div><div class="eti">Eventos</div></div>
+    <div class="card kpi"><div class="num">210</div><div class="eti">Inscripciones activas</div></div>
+    <div class="card kpi"><div class="num">164</div><div class="eti">Asistentes</div></div>
+    <div class="card kpi"><div class="num">78 %</div><div class="eti">Asistencia promedio</div></div>
+  </div>
+  <div class="card tabla-envoltura" style="padding:0">
+    <table>
+      <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Organizador</th><th>Cupo</th><th>Inscritos</th><th>Disponibles</th><th>Asistentes</th><th>% asist.</th></tr></thead>
+      <tbody>
+        <tr><td>Taller de HTML</td><td>2 dic</td><td><span class="chip gris">Finalizado</span></td><td>Carlos Ruiz</td><td>20</td><td>20</td><td>0</td><td>17</td><td>85 %</td></tr>
+        <tr><td>Taller de Python</td><td>10 dic</td><td><span class="chip ok">Publicado</span></td><td>Ana Torres</td><td>30</td><td>18</td><td>12</td><td>—</td><td>—</td></tr>
+        <tr><td>Seminario de Bases de Datos</td><td>11 dic</td><td><span class="chip ok">Publicado</span></td><td>Carlos Ruiz</td><td>30</td><td>27</td><td>3</td><td>—</td><td>—</td></tr>
+        <tr><td>Charla: Inteligencia Artificial</td><td>12 dic</td><td><span class="chip ok">Publicado</span></td><td>Ana Torres</td><td>80</td><td>80</td><td>0</td><td>—</td><td>—</td></tr>
+        <tr><td>Taller de Excel</td><td>20 nov</td><td><span class="chip error">Cancelado</span></td><td>Ana Torres</td><td>25</td><td>0</td><td>25</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<script>
+  const personas = [
+    ['Laura Gómez','laura.gomez@ejemplo.test','Estudiante','p'],
+    ['Carlos Ruiz','carlos.ruiz@ejemplo.test','Docente','p'],
+    ['María Pérez','maria.perez@ejemplo.test','Estudiante','a'],
+    ['Andrés Díaz','andres.diaz@ejemplo.test','Externo','p'],
+    ['Sofía Herrera','sofia.herrera@ejemplo.test','Estudiante','a']
+  ];
+  const lista = document.getElementById('lista');
+  function pintar(){
+    lista.innerHTML = personas.map((p,i)=>`<tr><td><strong>${p[0]}</strong></td><td>${p[1]}</td><td>${p[2]}</td>
+      <td><span class="seg"><button class="pres ${p[3]==='p'?'on':''}" data-i="${i}" data-v="p">Presente</button><button class="aus ${p[3]==='a'?'on':''}" data-i="${i}" data-v="a">Ausente</button></span></td></tr>`).join('');
+  }
+  const _pintar = pintar;
+  pintar = function(){ _pintar(); document.getElementById('resumen').textContent = personas.filter(p=>p[3]==='p').length + ' de ' + personas.length + ' presentes (lista de ejemplo)'; };
+  lista.addEventListener('click',e=>{const b=e.target.closest('button'); if(!b)return; personas[b.dataset.i][3]=b.dataset.v; pintar();});
+  document.getElementById('todos').onclick=()=>{personas.forEach(p=>p[3]='p');pintar();};
+  document.getElementById('momento').onclick=()=>{const f=document.getElementById('form-momento');f.style.display=f.style.display==='none'?'block':'none';};
+  pintar();
+
+  const rol = document.getElementById('rol');
+  rol.onchange=()=>{document.body.dataset.rol=rol.value; irA(location.hash.slice(1)||'catalogo');};
+  function irA(id){
+    const personal=['panel','asistencia','consolidado'];
+    if(personal.includes(id) && document.body.dataset.rol==='participante') id='login';
+    if(id==='consolidado' && document.body.dataset.rol==='organizador') id='panel';
+    if(!document.getElementById(id)) id='catalogo';
+    document.querySelectorAll('section.pantalla').forEach(s=>s.classList.toggle('visible',s.id===id));
+    document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('activo',a.dataset.p===id));
+    window.scrollTo(0,0);
+  }
+  window.addEventListener('hashchange',()=>irA(location.hash.slice(1)));
+  document.querySelectorAll('.solo-part').forEach(e=>e.classList.add('solo-part'));
+  irA(location.hash.slice(1)||'catalogo');
+</script>
+<style>
+  /* "Ingresar" solo para participantes sin sesión */
+  body:not([data-rol="participante"]) .solo-part{display:none}
+</style>
+</body>
+</html>
