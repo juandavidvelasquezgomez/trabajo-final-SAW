@@ -16,6 +16,9 @@ venv/
 *.sqlite
 *.sqlite3
 *.db
+*.db-wal
+*.db-shm
+.pytest_cache/
 
 # Sistema / editor
 .DS_Store

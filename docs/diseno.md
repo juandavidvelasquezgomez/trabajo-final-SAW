@@ -164,6 +164,10 @@ Prefijo `/api`. Formato JSON. Autenticación: cabecera `Authorization: Bearer <t
 | 15 | POST | `/eventos/{id}/asistencia/lote` | Dueño o coordinación | Registra asistencia de varios inscritos | 200 | RF-10 |
 | 16 | GET | `/consolidado` | Coordinación | Totales y detalle por evento; filtros `desde`, `hasta`, `tipo`, `estado`, `organizador_id` | 200 | RF-12, RF-14 |
 | 17 | GET | `/organizadores` | Coordinación | Lista de organizadores para asignar al crear un evento | 200 | RF-01 |
+| 18 | GET | `/panel/eventos` | Personal | Eventos que gestiona el usuario, en cualquier estado (todos si es coordinación); filtro `estado` | 200 | RF-03, RF-13 |
+| 19 | GET | `/salud` | Público | Comprobación de que el servicio responde | 200 | - |
+
+> Los endpoints 18 y 19 se añadieron al implementar: el panel necesita listar eventos en borrador, que el catálogo público no muestra.
 
 "Dueño" = el organizador asignado al evento (RN-07).
 
@@ -182,7 +186,7 @@ Prefijo `/api`. Formato JSON. Autenticación: cabecera `Authorization: Bearer <t
   "organizador_id": 2
 }
 ```
-Respuesta `201`: el evento con su `id`, `estado: "borrador"` y `cupos_disponibles: 30`. `organizador_id` solo lo puede indicar la coordinación; para un organizador se ignora y se usa el propio.
+Respuesta `201`: el evento con su `id`, `estado: "borrador"` y `cupos_disponibles: 30`. `organizador_id` solo lo puede indicar la coordinación; si un organizador indica otro distinto de sí mismo, la API responde `403`.
 
 **Inscribirse** - `POST /api/eventos/5/inscripciones`
 ```json
@@ -252,6 +256,14 @@ Todos los errores usan la misma estructura y nunca incluyen rastros internos ni 
 
 Los endpoints públicos de consulta de inscripciones (10) y cancelación (9) exigen **correo y documento** coincidentes, porque los participantes no tienen cuenta (RN-05). Si los datos no coinciden, la respuesta es la misma que si no existiera la inscripción, para no revelar si el correo está registrado.
 
+**Medidas de seguridad implementadas**
+- **Contraseñas:** hash `scrypt` con sal aleatoria única; la base de datos rechaza valores que no tengan ese formato. Política: 10 a 128 caracteres, con al menos una letra y un número.
+- **Inicio de sesión:** el mensaje de error es el mismo si el correo no existe o la contraseña es incorrecta, y se calcula un hash en ambos casos para que el tiempo de respuesta no delate si el correo está registrado. Tras 5 intentos fallidos con el mismo correo e IP se bloquea el acceso 15 minutos (`429`).
+- **Token:** firmado con `HS256`, solo con el identificador del usuario. El rol y el estado activo se consultan en la base de datos en cada solicitud, así que un cambio de rol o una baja tiene efecto inmediato. Vence a las 00:00 de Colombia.
+- **Entradas:** se rechazan campos desconocidos y valores de tipo incorrecto (por ejemplo, un cupo escrito como texto); los datos se normalizan antes de guardarse. Todo el SQL usa parámetros.
+- **Respuestas:** cabeceras `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` y `Content-Security-Policy`; `Cache-Control: no-store` en la API. Los errores no incluyen rastros internos ni repiten los datos enviados.
+- **Secretos:** `SECRET_KEY` es obligatoria y la aplicación no arranca si falta o es corta.
+
 ## 7. Interfaz (recorridos y prototipos)
 
 ### 7.1 Pantallas
@@ -301,6 +313,12 @@ ASISTENCIA (personal)                          CONSOLIDADO (coordinación)
 3. Con el cupo agotado o con una inscripción duplicada, la interfaz muestra el error devuelto por la API y no cambia nada.
 4. Cuando el evento inicia, el organizador abre **asistencia**, marca a los presentes (o inscribe a alguien en el momento).
 5. La coordinación abre el **consolidado** y comprueba que cupo, inscritos y asistentes coinciden.
+
+### 7.4 Fechas en los formularios
+
+- **Crear o editar un evento:** los selectores de inicio y fin **deshabilitan las fechas y horas anteriores al momento actual**. El fin solo se habilita después de elegir el inicio, y admite como máximo 8 horas más.
+- **Fechas pasadas = historial:** solo se consultan. Los filtros del catálogo, del panel y del consolidado no tienen esa restricción, y los eventos finalizados siguen visibles para el personal.
+- **Es una ayuda de la interfaz, no la defensa:** un selector se puede saltar (escribiendo la fecha o llamando a la API directamente). La regla real la aplica el servidor (RN-09: `FECHA_EN_PASADO`, `DURACION_EXCEDIDA`).
 
 ## 8. Configuración y datos de prueba
 
