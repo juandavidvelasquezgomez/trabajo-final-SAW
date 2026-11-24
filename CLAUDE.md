@@ -14,7 +14,9 @@ Interfaz web + API REST + base de datos relacional, conectadas de verdad (sin da
 Entregables en el repo: `README.md` (es el informe), `docs/requisitos.md`, `docs/diseno.md`, `docs/trazabilidad.md`, `evidencias/`, código, `.env.example`, scripts de base de datos. Hay 12 pruebas funcionales documentadas (no se exige automatizarlas). Evaluación: implementación e integración 45 %, pruebas y documentación 20 %, Git/GitHub 15 %, requisitos 10 %, diseño 10 %.
 
 ## Estado actual
-- Actividad 2 (requisitos) en curso: la entrevista con el docente **no se hizo**; el autor responde él mismo y todo sigue siendo **supuesto** hasta que el docente lo confirme. Ver `docs/requisitos.md` (secciones 3 y 9) para lo ya respondido y lo pendiente.
+- Actividad 2 (requisitos): **borrador completo**. La entrevista con el docente **no se hizo**; el autor respondió él mismo las 20 preguntas y todo sigue siendo **supuesto** hasta que el docente lo confirme. Ver `docs/requisitos.md`: entrevista (sección 3), reglas de negocio RN-01..RN-14 (sección 4), requisitos RF/RNF, historias de usuario y decisiones (sección 9). Si `docs/requisitos.md` no aparece en `main`, está en la rama `docs/requisitos` (pull request abierto).
+- Modelo de permisos acordado: el organizador gestiona solo sus eventos; la coordinación tiene todos sus permisos sobre todos los eventos (incluida la creación) y además los consolidados; los participantes no inician sesión.
+- Siguiente paso: Actividad 3, `docs/diseno.md` (arquitectura, tecnología, modelo de datos, especificación de la API). Antes de construir mucho, conviene que el docente confirme `docs/requisitos.md`.
 - Tecnología (lenguaje, frameworks, base de datos): **aún sin decidir**. Se decide en `docs/diseno.md`. Preferir una base de datos que se levante igual en ambos equipos sin instalar un servidor.
 
 ## Reglas de trabajo
