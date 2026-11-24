@@ -17,7 +17,7 @@ function pintarDetalle(e) {
   const chipCupos = e.cupos_disponibles === 0 ? ['error', 'Agotado'] : pocos ? ['aviso', 'Últimos cupos'] : ['ok', 'Cupos disponibles'];
   const imagen = e.imagen_url && e.imagen_url.startsWith('https://')
     ? el('img', { class: 'portada', src: e.imagen_url, alt: '', referrerpolicy: 'no-referrer' }) : null;
-  detalle.replaceChildren(
+  detalle.replaceChildren(...[       // replaceChildren convierte un null en el texto "null": se descartan los vacíos
     chipTipo(e.tipo), ' ', el('span', { class: `chip ${chipCupos[0]}` }, chipCupos[1]),
     el('h1', { style: 'margin-top:8px' }, e.titulo),
     el('p', { class: 'meta' }, `${rangoHorario(e.inicio, e.fin)} (hora de Colombia)`),
@@ -25,7 +25,8 @@ function pintarDetalle(e) {
     barraCupo(e.inscritos_activos, e.cupo),
     el('p', { class: 'meta' }, el('strong', {}, `${e.cupos_disponibles} cupos disponibles`), ` de ${e.cupo}`),
     imagen,
-    e.descripcion ? el('p', { style: 'white-space:pre-line' }, e.descripcion) : null);
+    e.descripcion ? el('p', { style: 'white-space:pre-line' }, e.descripcion) : null,
+  ].filter((nodo) => nodo !== null));
   document.title = `${e.titulo} · Eventos académicos`;
 
   // El formulario se bloquea cuando no se puede inscribir; el servidor lo vuelve a comprobar.
