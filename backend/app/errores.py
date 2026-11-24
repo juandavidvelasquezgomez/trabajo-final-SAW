@@ -48,6 +48,10 @@ _TRADUCCIONES = {
     "too_short": "Debe tener al menos un elemento.",
     "too_long": "Tiene demasiados elementos.",
     "bool_type": "Debe ser verdadero o falso.",
+    "date_parsing": "Fecha inválida. Formato: AAAA-MM-DD.",
+    "date_type": "Fecha inválida. Formato: AAAA-MM-DD.",
+    "date_from_datetime_parsing": "Fecha inválida. Formato: AAAA-MM-DD.",
+    "date_from_datetime_inexact": "Fecha inválida. Formato: AAAA-MM-DD.",
 }
 
 

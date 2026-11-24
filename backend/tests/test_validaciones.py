@@ -235,8 +235,12 @@ def test_recurso_inexistente_y_metodo_no_permitido(cliente):
 
 
 def test_filtros_de_fecha_invalidos(cliente):
-    for params in ({"desde": "10/12/2026"}, {"hasta": "2026-02-30"}, {"desde": "2026-1-1"}, {"tipo": "fiesta"}):
-        assert cliente.get("/api/eventos", params=params).status_code == 422
+    for params in ({"desde": "10/12/2026"}, {"hasta": "2026-02-30"}, {"desde": "2026-1-1"}, {"tipo": "fiesta"},
+                   {"desde": "1700000000"}, {"desde": "2026-12-01T10:30:00"}, {"hasta": "mañana"}, {"desde": "2026-13-01"},
+                   {"desde": "20261201"}, {"hasta": "'; DROP TABLE eventos;--"}):
+        r = cliente.get("/api/eventos", params=params)
+        assert r.status_code == 422 and codigo(r) == "DATOS_INVALIDOS", params
+    assert "Fecha inválida" in cliente.get("/api/eventos", params={"desde": "10/12/2026"}).json()["error"]["detalles"][0]["mensaje"]
     assert cliente.get("/api/eventos", params={"desde": "2026-12-01", "hasta": "2026-12-31"}).status_code == 200
 
 

@@ -4,14 +4,14 @@ from fastapi import APIRouter, Depends
 
 from .. import auth, reglas
 from ..schemas import TIPOS_EVENTO, EstadoEventoIn, EventoCrear, EventoEditar
-from .comun import IdPath, fecha_consulta
+from .comun import Desde, Hasta, IdPath, limites_de_dia
 
 router = APIRouter(tags=["Eventos"])
 
 
 @router.get("/eventos", summary="Catálogo de eventos publicados")
-def catalogo(tipo: Literal[TIPOS_EVENTO] | None = None, desde: str | None = None, hasta: str | None = None):
-    return reglas.catalogo(tipo, fecha_consulta(desde, "desde"), fecha_consulta(hasta, "hasta", fin_de_dia=True))
+def catalogo(tipo: Literal[TIPOS_EVENTO] | None = None, desde: Desde = None, hasta: Hasta = None):
+    return reglas.catalogo(tipo, limites_de_dia(desde), limites_de_dia(hasta, fin_de_dia=True))
 
 
 @router.get("/eventos/{evento_id}", summary="Detalle de un evento")

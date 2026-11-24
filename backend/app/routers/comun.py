@@ -2,7 +2,7 @@
 from datetime import date, datetime
 from typing import Annotated
 
-from fastapi import Path
+from fastapi import Path, Query
 
 from .. import tiempo
 from ..errores import ErrorApi
@@ -15,17 +15,17 @@ def _error_campo(campo: str, mensaje: str) -> ErrorApi:
                     [{"campo": campo, "mensaje": mensaje}])
 
 
-def fecha_consulta(valor: str | None, campo: str, fin_de_dia: bool = False) -> datetime | None:
-    """Fecha AAAA-MM-DD de un filtro -> instante UTC (inicio o fin de ese día en Colombia)."""
+Desde = Annotated[date | None, Query(description="Fecha inicial, inclusive (AAAA-MM-DD, hora de Colombia).",
+                                      examples=["2026-12-01"])]
+Hasta = Annotated[date | None, Query(description="Fecha final, inclusive (AAAA-MM-DD, hora de Colombia).",
+                                      examples=["2026-12-31"])]
+
+
+def limites_de_dia(valor: date | None, fin_de_dia: bool = False) -> datetime | None:
+    """Fecha de un filtro -> instante UTC (inicio o fin de ese día en Colombia)."""
     if valor is None:
         return None
-    try:
-        if len(valor) != 10:
-            raise ValueError
-        dia = date.fromisoformat(valor)
-    except ValueError:
-        raise _error_campo(campo, "Fecha inválida. Formato: AAAA-MM-DD.")
-    return tiempo.fin_del_dia(dia) if fin_de_dia else tiempo.inicio_del_dia(dia)
+    return tiempo.fin_del_dia(valor) if fin_de_dia else tiempo.inicio_del_dia(valor)
 
 
 def normalizar_consulta(funcion, valor: str, campo: str) -> str:
