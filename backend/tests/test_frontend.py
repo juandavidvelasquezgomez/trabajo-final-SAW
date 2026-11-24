@@ -26,6 +26,14 @@ def test_las_paginas_llevan_las_cabeceras_de_seguridad(cliente):
     assert r.headers["x-frame-options"] == "DENY" and r.headers["x-content-type-options"] == "nosniff"
 
 
+def test_el_navegador_revalida_las_paginas_y_scripts_en_cada_carga(cliente):
+    """Sin esto el navegador conserva copias viejas de los scripts y no se ven los cambios."""
+    for ruta in ("/", "/index.html", "/js/evento.js", "/css/estilos.css"):
+        r = cliente.get(ruta)
+        assert r.headers["cache-control"] == "no-cache" and r.headers.get("etag"), ruta
+    assert cliente.get("/api/salud").headers["cache-control"] == "no-store"      # la API nunca se guarda
+
+
 def test_la_api_no_queda_tapada_por_el_frontend(cliente):
     assert cliente.get("/api/salud").json() == {"estado": "ok"}
     assert cliente.get("/api/no-existe").json()["error"]["codigo"] == "RECURSO_NO_ENCONTRADO"
