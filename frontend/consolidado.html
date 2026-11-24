@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Consolidado · Eventos académicos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header id="encabezado"></header>
+  <main>
+    <h1>Consolidado</h1>
+    <p class="sub">Eventos, inscripciones y asistencia de toda la institución. Las fechas pasadas se pueden consultar como historial.</p>
+    <form id="filtros" class="card filtros" style="padding:14px" novalidate>
+      <div class="campo"><label for="f-desde">Desde</label><input type="date" id="f-desde" name="desde"></div>
+      <div class="campo"><label for="f-hasta">Hasta</label><input type="date" id="f-hasta" name="hasta"></div>
+      <div class="campo"><label for="f-tipo">Tipo</label>
+        <select id="f-tipo" name="tipo">
+          <option value="">Todos</option>
+          <option value="conferencia">Conferencia</option>
+          <option value="taller">Taller</option>
+          <option value="seminario">Seminario</option>
+          <option value="capacitacion">Capacitación</option>
+        </select></div>
+      <div class="campo"><label for="f-estado">Estado</label>
+        <select id="f-estado" name="estado">
+          <option value="">Todos</option>
+          <option value="borrador">Borrador</option>
+          <option value="publicado">Publicado</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="cancelado">Cancelado</option>
+        </select></div>
+      <div class="campo"><label for="f-organizador">Organizador</label>
+        <select id="f-organizador" name="organizador_id"><option value="">Todos</option></select></div>
+      <div style="align-self:end"><button class="btn" type="submit">Aplicar</button></div>
+    </form>
+    <div id="mensaje"></div>
+    <div class="kpis" id="kpis"></div>
+    <div class="card tabla-envoltura" style="padding:0">
+      <table>
+        <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Organizador</th><th>Cupo</th><th>Inscritos</th><th>Disponibles</th><th>Asistentes</th><th>% asist.</th></tr></thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+  </main>
+  <script type="module" src="js/consolidado.js"></script>
+</body>
+</html>
