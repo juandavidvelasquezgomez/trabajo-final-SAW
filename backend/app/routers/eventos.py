@@ -4,13 +4,14 @@ from fastapi import APIRouter, Depends
 
 from .. import auth, reglas
 from ..schemas import TIPOS_EVENTO, EstadoEventoIn, EventoCrear, EventoEditar
-from .comun import Desde, Hasta, IdPath, limites_de_dia
+from .comun import Desde, Hasta, IdPath, limites_de_dia, validar_rango_de_fechas
 
 router = APIRouter(tags=["Eventos"])
 
 
 @router.get("/eventos", summary="Catálogo de eventos publicados")
 def catalogo(tipo: Literal[TIPOS_EVENTO] | None = None, desde: Desde = None, hasta: Hasta = None):
+    validar_rango_de_fechas(desde, hasta)
     return reglas.catalogo(tipo, limites_de_dia(desde), limites_de_dia(hasta, fin_de_dia=True))
 
 

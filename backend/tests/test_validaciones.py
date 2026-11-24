@@ -244,6 +244,18 @@ def test_filtros_de_fecha_invalidos(cliente):
     assert cliente.get("/api/eventos", params={"desde": "2026-12-01", "hasta": "2026-12-31"}).status_code == 200
 
 
+def test_rango_de_fechas_invertido_se_rechaza_con_un_mensaje_claro(cliente, coord):
+    mensaje = "La fecha «desde» no puede ser posterior a la fecha «hasta»."
+    for ruta, cabeceras in (("/api/eventos", {}), ("/api/consolidado", coord["headers"])):
+        r = cliente.get(ruta, params={"desde": "2028-05-22", "hasta": "1980-04-30"}, headers=cabeceras)
+        assert r.status_code == 422 and codigo(r) == "DATOS_INVALIDOS", ruta
+        assert r.json()["error"]["detalles"] == [{"campo": "desde", "mensaje": mensaje}], ruta
+        # un solo día (desde = hasta) y un rango normal sí son válidos
+        assert cliente.get(ruta, params={"desde": "2026-12-01", "hasta": "2026-12-01"}, headers=cabeceras).status_code == 200
+        assert cliente.get(ruta, params={"desde": "2026-12-01", "hasta": "2026-12-31"}, headers=cabeceras).status_code == 200
+        assert cliente.get(ruta, params={"desde": "2026-12-01"}, headers=cabeceras).status_code == 200   # un solo extremo
+
+
 def test_texto_con_inyeccion_sql_o_html_se_guarda_como_texto(cliente, org):
     titulo = "x'); DROP TABLE eventos;-- <img src=x onerror=alert(1)>"
     r = cliente.post("/api/eventos", json=payload_evento(titulo=titulo), headers=org["headers"])
