@@ -5,7 +5,7 @@ import pytest
 
 from app import db, tiempo
 from ayudas import (codigo, crear_evento, crear_usuario, evento_en, evento_publicado, inscribir, instante, iso,
-                    login, payload_evento, publicar)
+                    login, payload_evento, payload_participante, publicar)
 
 
 # ------------------------------------------------------------------ creación
@@ -150,6 +150,24 @@ def test_el_evento_pasa_a_finalizado_automaticamente(cliente, org, reloj):
     assert cliente.get("/api/eventos").json() == []
     r = inscribir(cliente, ev["id"])
     assert r.status_code == 409 and codigo(r) == "EVENTO_NO_ABIERTO"
+
+
+def test_el_detalle_y_el_catalogo_no_revelan_quienes_se_inscribieron(cliente, org, org2):
+    """El público ve solo cifras. Los datos de los inscritos únicamente salen por la lista del personal."""
+    ev = evento_publicado(cliente, org["headers"])
+    inscribir(cliente, ev["id"], 1)
+    p = payload_participante(1)
+    for ruta, cabeceras in ((f"/api/eventos/{ev['id']}", {}), ("/api/eventos", {}),
+                            (f"/api/eventos/{ev['id']}", org2["headers"]),       # otro organizador: tampoco
+                            (f"/api/eventos/{ev['id']}", org["headers"])):       # ni siquiera el dueño, en el detalle
+        texto = cliente.get(ruta, headers=cabeceras).text
+        for dato in (p["correo"], p["documento"], p["nombre_completo"]):
+            assert dato not in texto, f"{ruta} expone {dato}"
+        assert "participante" not in texto
+    assert cliente.get(f"/api/eventos/{ev['id']}")  .json()["inscritos_activos"] == 1       # sí las cifras
+    assert cliente.get(f"/api/eventos/{ev['id']}/inscripciones").status_code == 401           # la lista exige sesión
+    assert cliente.get(f"/api/eventos/{ev['id']}/inscripciones", headers=org2["headers"]).status_code == 403
+    assert p["correo"] in cliente.get(f"/api/eventos/{ev['id']}/inscripciones", headers=org["headers"]).text
 
 
 # ------------------------------------------------------------------- edición

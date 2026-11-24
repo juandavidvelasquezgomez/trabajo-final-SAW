@@ -1,4 +1,5 @@
 import { api } from './api.js';
+import { obtenerSesion } from './sesion.js';
 import { barraCupo, chipTipo, el, mostrarError, mostrarMensaje, parametroId, pintarEncabezado, rangoHorario } from './comun.js';
 
 pintarEncabezado('catalogo');
@@ -11,6 +12,16 @@ const formCancelar = document.getElementById('form-cancelar');
 const botonInscribir = document.getElementById('btn-inscribir');
 const avisoInscripcion = document.getElementById('aviso-inscripcion');
 let inscripcionCerrada = false;
+
+/** Solo el organizador del evento o la coordinación ven quiénes están inscritos (el público ve solo cifras).
+ *  Es una comodidad de la interfaz: la lista de inscritos la protege la API (401 sin sesión, 403 sin permiso). */
+function enlaceGestion(e) {
+  const sesion = obtenerSesion();
+  const puede = sesion && (sesion.usuario.rol === 'coordinacion' || sesion.usuario.id === e.organizador.id);
+  if (!puede) return null;
+  return el('p', { style: 'margin:12px 0 0' },
+    el('a', { class: 'btn sec peq', href: `asistencia.html?id=${e.id}` }, 'Ver inscritos y asistencia'));
+}
 
 function pintarDetalle(e) {
   const pocos = e.cupos_disponibles > 0 && e.cupos_disponibles <= Math.max(3, Math.ceil(e.cupo * 0.1));
@@ -25,6 +36,7 @@ function pintarDetalle(e) {
     barraCupo(e.inscritos_activos, e.cupo),
     el('p', { class: 'meta' }, el('strong', {}, `${e.cupos_disponibles} cupos disponibles`), ` de ${e.cupo}`),
     imagen,
+    enlaceGestion(e),
     e.descripcion ? el('p', { style: 'white-space:pre-line' }, e.descripcion) : null,
   ].filter((nodo) => nodo !== null));
   document.title = `${e.titulo} · Eventos académicos`;
