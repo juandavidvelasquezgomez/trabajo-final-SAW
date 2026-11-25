@@ -1,5 +1,5 @@
 import { api, qs } from './api.js';
-import { aIsoBogota, ahoraBogota, aLocalBogota, avisoPendiente, chipEstado, desdeLocalBogota, el, fechaHora,
+import { aIsoBogota, ahoraBogota, aLocalBogota, TIPOS, avisoPendiente, chipEstado, desdeLocalBogota, el, fechaHora,
          mostrarError, mostrarMensaje, pintarEncabezado, requerirSesion } from './comun.js';
 
 const sesion = requerirSesion(['organizador', 'coordinacion']);
@@ -60,7 +60,7 @@ function iniciar() {
 
   function fila(ev) {
     return el('tr', {},
-      el('td', {}, el('strong', {}, ev.titulo), el('br'), el('span', { class: 'meta' }, ev.tipo)),
+      el('td', {}, el('strong', {}, ev.titulo), el('br'), el('span', { class: 'meta' }, TIPOS[ev.tipo])),
       el('td', {}, fechaHora(ev.inicio)),
       el('td', {}, chipEstado(ev.estado)),
       el('td', {}, `${ev.inscritos_activos} / ${ev.cupo}`),
@@ -96,14 +96,14 @@ function iniciar() {
     const select = document.getElementById('ev-organizador');
     const usuarios = await api('/organizadores');
     select.replaceChildren(...usuarios.map((u) =>
-      el('option', { value: u.id }, u.id === sesion.usuario.id ? `Yo (${u.nombre})` : `${u.nombre} (${u.rol})`)));
+      el('option', { value: u.id }, u.id === sesion.usuario.id ? `Yo (${u.nombre})` : `${u.nombre} (${u.rol === 'coordinacion' ? 'coordinación' : u.rol})`)));
     select.value = String(sesion.usuario.id);
   }
 
   function reiniciarFormulario() {
     editando = null;
     f.reset();
-    for (const campo of [f.inicio]) campo.disabled = false;
+    f.inicio.disabled = false;
     f.fin.disabled = true;
     if (esCoordinacion) f.organizador_id.value = String(sesion.usuario.id);
     document.getElementById('titulo-form').textContent = 'Nuevo evento';
@@ -123,12 +123,16 @@ function iniciar() {
     f.descripcion.value = ev.descripcion || '';
     f.imagen_url.value = ev.imagen_url || '';
     if (esCoordinacion) f.organizador_id.value = String(ev.organizador.id);
-    const iniciado = new Date() >= new Date(ev.inicio);
-    f.inicio.disabled = iniciado;                   // un evento que ya inició conserva sus fechas
+    // Un evento publicado que ya inició conserva sus fechas; un borrador vencido se puede reprogramar.
+    const iniciado = ev.estado === 'publicado' && new Date() >= new Date(ev.inicio);
+    f.inicio.disabled = iniciado;
     f.fin.disabled = iniciado;
     f.inicio.value = ev.inicio.slice(0, 16);        // la API devuelve la hora de Colombia
     f.fin.value = ev.fin.slice(0, 16);
-    if (!iniciado) { f.inicio.min = ahoraBogota(); limitesDeFechas(); f.fin.value = ev.fin.slice(0, 16); }
+    if (!iniciado) {
+      limitesDeFechas();                            // si la fecha ya pasó, se vacía para elegir una nueva
+      if (f.inicio.value) f.fin.value = ev.fin.slice(0, 16);
+    }
     document.getElementById('titulo-form').textContent = `Editar evento: ${ev.titulo}`;
     document.getElementById('btn-guardar').textContent = 'Guardar cambios';
     btnPublicar.classList.add('invisible');

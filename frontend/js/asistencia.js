@@ -1,5 +1,5 @@
 import { api } from './api.js';
-import { chipEstado, el, fechaHora, mostrarError, mostrarMensaje, parametroId, pintarEncabezado, rangoHorario,
+import { chipEstado, el, fechaHora, mostrarError, mostrarMensaje, parametroId, pintarEncabezado, plural, rangoHorario,
          requerirSesion } from './comun.js';
 
 const sesion = requerirSesion(['organizador', 'coordinacion']);
@@ -37,7 +37,7 @@ function iniciar() {
 
     const activas = inscripciones.filter((i) => i.estado === 'activa');
     const presentes = activas.filter((i) => i.asistencia === 'presente').length;
-    document.getElementById('resumen').textContent = `${presentes} de ${activas.length} presentes · ${activas.length} inscritos activos`;
+    document.getElementById('resumen').textContent = `${presentes} de ${activas.length} presentes · ${plural(activas.length, 'inscrito activo', 'inscritos activos')}`;
 
     const ahora = new Date();
     const enCurso = evento.estado === 'publicado' && ahora >= new Date(evento.inicio) && ahora < new Date(evento.fin);
@@ -57,7 +57,7 @@ function iniciar() {
       type: 'button', class: `${clase}${i.asistencia === valor ? ' on' : ''}`, disabled: bloqueada,
       'aria-pressed': String(i.asistencia === valor), onclick: () => marcar(i, valor),
     }, texto);
-    const quitar = activa && i.asistencia !== 'presente'
+    const quitar = activa && i.asistencia !== 'presente' && ventana.estado !== 'cerrada'
       ? el('button', { class: 'btn peligro peq', type: 'button', onclick: () => quitarInscripcion(i) }, 'Quitar') : null;
     return el('tr', {},
       el('td', {}, el('strong', {}, i.participante.nombre_completo), i.en_el_momento ? el('span', { class: 'chip aviso', style: 'margin-left:6px' }, 'en el momento') : null),
@@ -107,7 +107,7 @@ function iniciar() {
     if (!pendientes.length) return;
     try {
       const r = await api(`/eventos/${id}/asistencia/lote`, { metodo: 'POST', cuerpo: { inscripcion_ids: pendientes, estado: 'presente' } });
-      mostrarMensaje(msg, 'ok', `Se marcaron ${r.actualizadas} participantes como presentes.`);
+      mostrarMensaje(msg, 'ok', r.actualizadas === 1 ? 'Se marcó 1 participante como presente.' : `Se marcaron ${r.actualizadas} participantes como presentes.`);
     } catch (error) {
       mostrarError(msg, error);
     }

@@ -5,6 +5,13 @@ export const MENSAJE_RANGO = 'La fecha «desde» no puede ser posterior a la fec
 export const TIPOS = { conferencia: 'Conferencia', taller: 'Taller', seminario: 'Seminario', capacitacion: 'Capacitación' };
 const ESTADOS = { borrador: ['gris', 'Borrador'], publicado: ['ok', 'Publicado'], cancelado: ['error', 'Cancelado'], finalizado: ['gris', 'Finalizado'] };
 
+export const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+const ETIQUETAS = {
+  titulo: 'Título', tipo: 'Tipo', inicio: 'Inicio', fin: 'Fin', lugar: 'Lugar', cupo: 'Cupo', descripcion: 'Descripción',
+  imagen_url: 'Imagen', organizador_id: 'Organizador', nombre_completo: 'Nombre completo', correo: 'Correo',
+  documento: 'Documento', rol: 'Rol', programa: 'Programa', password: 'Contraseña', desde: 'Desde', hasta: 'Hasta',
+};
+
 // ------------------------------------------------------------------ DOM seguro
 /** Crea un elemento. Los hijos de tipo texto se insertan como TEXTO, nunca como HTML (evita XSS). */
 export function el(etiqueta, props = {}, ...hijos) {
@@ -56,7 +63,7 @@ export function mostrarMensaje(contenedor, tipo, texto, detalles = []) {
   contenedor.replaceChildren();
   if (!texto) return;
   const caja = el('div', { class: `alerta ${tipo}`, role: tipo === 'error' ? 'alert' : 'status' }, texto);
-  if (detalles.length) caja.append(el('ul', {}, detalles.map((d) => el('li', {}, d.campo ? `${d.campo}: ${d.mensaje}` : d.mensaje))));
+  if (detalles.length) caja.append(el('ul', {}, detalles.map((d) => el('li', {}, d.campo ? `${ETIQUETAS[d.campo] || d.campo}: ${d.mensaje}` : d.mensaje))));
   contenedor.append(caja);
 }
 export function mostrarError(contenedor, error) {
@@ -93,6 +100,7 @@ export function pintarEncabezado(activo) {
   const salir = () => { cerrarSesion(); location.href = 'index.html'; };
   const nav = el('nav', {},
     enlace('index.html', 'Catálogo', 'catalogo', activo),
+    enlace('constancia.html', 'Constancias', 'constancia', activo),
     rol ? enlace('panel.html', 'Panel', 'panel', activo) : null,
     rol === 'coordinacion' ? enlace('consolidado.html', 'Consolidado', 'consolidado', activo) : null,
     rol ? el('button', { class: 'btn sec peq', type: 'button', onclick: salir }, `Salir (${sesion.usuario.nombre})`)
