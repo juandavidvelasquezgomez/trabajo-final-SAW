@@ -191,6 +191,12 @@ class CancelarInscripcionIn(Base):
     documento: Documento
 
 
+class IdentificacionIn(Base):
+    """Identifica a un participante sin cuenta. Se envía en el cuerpo (POST), no en la dirección."""
+    correo: Correo
+    documento: Documento
+
+
 class InscripcionEstadoIn(Base):
     estado: Literal["cancelada"]
 

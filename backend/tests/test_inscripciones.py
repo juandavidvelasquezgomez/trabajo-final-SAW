@@ -22,7 +22,7 @@ def test_inscripcion_valida_se_guarda_y_se_puede_consultar(cliente, org):
     d = r.json()
     assert d["estado"] == "activa" and d["cupos_disponibles"] == 29 and d["participante"]["correo"] == "persona1@ejemplo.test"
     p = payload_participante(1)
-    lista = cliente.get("/api/inscripciones", params={"correo": p["correo"], "documento": p["documento"]}).json()
+    lista = cliente.post("/api/inscripciones/consultar", json={"correo": p["correo"], "documento": p["documento"]}).json()
     assert len(lista) == 1 and lista[0]["evento"]["id"] == ev["id"] and lista[0]["estado"] == "activa"
     assert cliente.get(f"/api/eventos/{ev['id']}").json()["cupos_disponibles"] == 29       # CA-02 coherente
 
@@ -230,11 +230,27 @@ def test_consulta_de_inscripciones_exige_ambos_datos_y_no_revela_mas(cliente, or
     ev = evento_publicado(cliente, org["headers"])
     inscribir(cliente, ev["id"], 1)
     p = payload_participante(1)
-    assert cliente.get("/api/inscripciones").status_code == 422
-    assert cliente.get("/api/inscripciones", params={"correo": p["correo"]}).status_code == 422
-    assert cliente.get("/api/inscripciones", params={"correo": "nope", "documento": p["documento"]}).status_code == 422
-    assert cliente.get("/api/inscripciones", params={"correo": p["correo"], "documento": "9999999999"}).json() == []
-    assert cliente.get("/api/inscripciones", params={"correo": "otro@ejemplo.test", "documento": p["documento"]}).json() == []
+    url = "/api/inscripciones/consultar"
+    assert cliente.post(url, json={}).status_code == 422
+    assert cliente.post(url, json={"correo": p["correo"]}).status_code == 422
+    assert cliente.post(url, json={"correo": "nope", "documento": p["documento"]}).status_code == 422
+    assert cliente.post(url, json={"correo": p["correo"], "documento": "9999999999"}).json() == []
+    assert cliente.post(url, json={"correo": "otro@ejemplo.test", "documento": p["documento"]}).json() == []
+    # no existe una consulta con los datos personales en la dirección
+    r = cliente.get("/api/inscripciones", params={"correo": p["correo"], "documento": p["documento"]})
+    assert r.status_code in (404, 405) and p["correo"] not in r.text
+
+
+def test_no_se_quita_una_inscripcion_despues_de_cerrado_el_plazo(cliente, org, reloj):
+    ev = evento_publicado(cliente, org["headers"])
+    a, b = (inscribir(cliente, ev["id"], n).json()["id"] for n in (1, 2))
+    quitar = lambda ins: cliente.patch(f"/api/inscripciones/{ins}", json={"estado": "cancelada"}, headers=org["headers"])
+    reloj.fijar(instante(ev["fin"]) + timedelta(hours=24))          # último instante permitido
+    assert quitar(a).status_code == 200
+    reloj.avanzar(seconds=1)
+    r = quitar(b)
+    assert r.status_code == 409 and codigo(r) == "PLAZO_CERRADO"
+    assert contar("inscripciones", "estado = 'activa'") == 1        # el historial no cambió
 
 
 # --------------------------------------------------------- vista del personal

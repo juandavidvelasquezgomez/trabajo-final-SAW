@@ -1,0 +1,46 @@
+﻿Evidencia P12 - Persistencia en la base de datos SQLite (backend/db/eventos.db)
+Consulta ejecutada: 2026-11-24 02:30:37 (hora local de Colombia)
+Las fechas de la base de datos están en UTC (Colombia = UTC-5): 07:29Z = 02:29 a. m.
+
+-- 1. Evento creado desde la interfaz (P01)
+   SELECT id, titulo, tipo, inicio, fin, cupo, estado FROM eventos WHERE id = 8
+   id | titulo                    | tipo   | inicio               | fin                  | cupo | estado   
+   ---+---------------------------+--------+----------------------+----------------------+------+----------
+   8  | Taller de Integración Web | taller | 2026-11-24T07:29:00Z | 2026-11-24T08:29:00Z | 3    | publicado
+
+-- 2. Inscripciones del evento (P05, P07, P08): 3 activas = cupo 3; los rechazados no dejaron rastro
+   SELECT i.id, p.nombre_completo, p.correo, p.documento, i.estado
+   FROM inscripciones i JOIN participantes p ON p.id = i.participante_id
+   WHERE i.evento_id = 8 ORDER BY i.id
+   id | nombre_completo | correo                     | documento  | estado
+   ---+-----------------+----------------------------+------------+-------
+   29 | Camila Vargas   | camila.vargas@ejemplo.test | 1000000102 | activa
+   30 | Diego Ramírez   | diego.ramirez@ejemplo.test | 1000000103 | activa
+   31 | Elena Sánchez   | elena.sanchez@ejemplo.test | 1000000104 | activa
+
+-- 3. Asistencia registrada desde la interfaz (P10)
+   SELECT a.inscripcion_id, p.nombre_completo, a.estado, u.nombre AS registrado_por, a.registrado_en
+   FROM asistencias a JOIN inscripciones i ON i.id = a.inscripcion_id
+   JOIN participantes p ON p.id = i.participante_id JOIN usuarios u ON u.id = a.registrado_por
+   WHERE i.evento_id = 8 ORDER BY a.inscripcion_id
+   inscripcion_id | nombre_completo | estado   | registrado_por    | registrado_en       
+   ---------------+-----------------+----------+-------------------+---------------------
+   29             | Camila Vargas   | presente | Oscar Organizador | 2026-11-24T07:29:30Z
+   30             | Diego Ramírez   | presente | Oscar Organizador | 2026-11-24T07:29:31Z
+
+-- 4. Los datos rechazados NO se guardaron (P06, P07, P08): ninguna de estas personas existe
+   SELECT correo, documento FROM participantes
+   WHERE correo IN ('juan.perez@ejemplo.test', 'fabian.torres@ejemplo.test')
+      OR documento IN ('1234', '1000000105')
+   (sin filas)
+
+-- 5. Consistencia (P11): cupo, inscritos activos, disponibles y asistentes
+   SELECT e.cupo,
+     (SELECT count(*) FROM inscripciones WHERE evento_id = e.id AND estado = 'activa') AS inscritos_activos,
+     e.cupo - (SELECT count(*) FROM inscripciones WHERE evento_id = e.id AND estado = 'activa') AS disponibles,
+     (SELECT count(*) FROM asistencias a JOIN inscripciones i ON i.id = a.inscripcion_id
+       WHERE i.evento_id = e.id AND a.estado = 'presente') AS asistentes
+   FROM eventos e WHERE e.id = 8
+   cupo | inscritos_activos | disponibles | asistentes
+   -----+-------------------+-------------+-----------
+   3    | 3                 | 0           | 2         

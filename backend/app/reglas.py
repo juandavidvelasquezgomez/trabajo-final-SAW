@@ -130,7 +130,7 @@ def editar_evento(usuario: dict, evento_id: int, d: EventoEditar) -> dict:
             nuevo_inicio = cambios.get("inicio", inicio_actual)
             nuevo_fin = cambios.get("fin", fin_actual)
             if nuevo_inicio != inicio_actual or nuevo_fin != fin_actual:
-                if ahora >= inicio_actual:
+                if ev["estado"] == "publicado" and ahora >= inicio_actual:
                     raise ErrorApi(409, "EVENTO_YA_INICIADO", "No se pueden cambiar las fechas de un evento que ya inició.")
                 validar_fechas(nuevo_inicio, nuevo_fin, exigir_futuro=nuevo_inicio != inicio_actual)
                 if ev["inscritos_activos"] > 0:
@@ -364,9 +364,14 @@ def cancelar_inscripcion_personal(usuario: dict, inscripcion_id: int) -> dict:
         ins = conn.execute("SELECT id, evento_id, estado FROM inscripciones WHERE id = ?", (inscripcion_id,)).fetchone()
         if not ins:
             raise ErrorApi(404, "INSCRIPCION_NO_ENCONTRADA", "La inscripción no existe.")
-        _exigir_gestion(usuario, _fila_evento(conn, ins["evento_id"]))
+        ev = _fila_evento(conn, ins["evento_id"])
+        _exigir_gestion(usuario, ev)
         if ins["estado"] != "activa":
             raise ErrorApi(409, "INSCRIPCION_NO_ACTIVA", "La inscripción ya no está activa.")
+        # RN-11: cerrado el plazo de corrección, el historial del evento ya no cambia
+        if tiempo.ahora() > tiempo.de_texto(ev["fin"]) + timedelta(hours=config.VENTANA_CORRECCION_HORAS):
+            raise ErrorApi(409, "PLAZO_CERRADO",
+                           "El plazo para modificar este evento terminó: ya no se pueden quitar inscripciones.")
         if conn.execute("SELECT 1 FROM asistencias WHERE inscripcion_id = ? AND estado = 'presente'",
                         (inscripcion_id,)).fetchone():
             raise ErrorApi(409, "INSCRIPCION_CON_ASISTENCIA", "No se puede cancelar: ya tiene asistencia registrada.")

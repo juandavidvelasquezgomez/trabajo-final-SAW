@@ -1,5 +1,5 @@
 import { api, qs } from './api.js';
-import { barraCupo, chipTipo, el, mostrarError, mostrarMensaje, pintarEncabezado, rangoHorario, validarRango } from './comun.js';
+import { barraCupo, chipTipo, el, mostrarError, mostrarMensaje, pintarEncabezado, plural, rangoHorario, validarRango } from './comun.js';
 
 pintarEncabezado('catalogo');
 const form = document.getElementById('filtros');
@@ -8,7 +8,7 @@ const mensaje = document.getElementById('mensaje');
 
 function disponibilidad(e) {
   if (e.cupos_disponibles === 0) return el('span', { class: 'chip error' }, 'Agotado');
-  const pocos = e.cupos_disponibles <= Math.max(3, Math.ceil(e.cupo * 0.1));
+  const pocos = e.inscritos_activos > 0 && e.cupos_disponibles <= Math.max(3, Math.ceil(e.cupo * 0.1));
   return el('span', { class: `chip ${pocos ? 'aviso' : 'ok'}` }, pocos ? 'Últimos cupos' : 'Cupos disponibles');
 }
 
@@ -19,7 +19,7 @@ function tarjeta(e) {
     el('p', { class: 'meta' }, rangoHorario(e.inicio, e.fin)),
     el('p', { class: 'meta' }, e.lugar),
     barraCupo(e.inscritos_activos, e.cupo),
-    el('p', { class: 'meta' }, `${e.inscritos_activos} inscritos · `, el('strong', {}, `${e.cupos_disponibles} cupos`), ` de ${e.cupo}`),
+    el('p', { class: 'meta' }, `${plural(e.inscritos_activos, 'inscrito', 'inscritos')} · `, el('strong', {}, plural(e.cupos_disponibles, 'cupo', 'cupos')), ` de ${e.cupo}`),
     el('p', { style: 'margin:12px 0 0' },
       el('a', { class: `btn peq${e.cupos_disponibles ? '' : ' sec'}`, href: `evento.html?id=${e.id}` }, 'Ver detalle')));
 }

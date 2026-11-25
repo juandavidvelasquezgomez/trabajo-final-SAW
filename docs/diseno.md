@@ -16,7 +16,7 @@
 | Autenticación | Token **JWT** firmado (PyJWT) y contraseñas con **hash `scrypt`** de la biblioteca estándar | Pocas dependencias externas; sin texto plano (RNF-11). |
 | Pruebas | Pruebas funcionales documentadas con la interfaz `/docs` de la API y el navegador | Lo que pide la Actividad 6; no se exige automatización. |
 
-**Dependencias externas previstas:** `fastapi`, `uvicorn`, `PyJWT`, `python-dotenv`. Todo lo demás es biblioteca estándar. Se verificará al instalar que todas funcionen con la versión de Python de ambos equipos.
+**Dependencias externas:** `fastapi`, `uvicorn`, `PyJWT`, `python-dotenv` y `segno` (códigos QR). Todo lo demás es biblioteca estándar. Verificadas con Python 3.14 en el equipo de desarrollo.
 
 **Un solo proceso:** `uvicorn` sirve la API bajo `/api/...`, la documentación en `/docs` y la interfaz web en `/`. No hay problemas de CORS ni configuración de dos servidores.
 
@@ -54,17 +54,23 @@ backend/
     auth.py            # hash de contraseñas, JWT, dependencias de rol
     errores.py         # formato único de errores y manejadores
     schemas.py         # modelos de entrada y salida
-    reglas.py          # reglas de negocio RN-01..RN-14
+    reglas.py          # reglas de negocio RN-01..RN-16
+    tiempo.py          # reloj único y conversión de zonas horarias
+    constancias.py     # extensión: constancias de asistencia
+    qr.py              # extensión: códigos QR
     routers/
-      auth.py  eventos.py  inscripciones.py  asistencia.py  consolidado.py
+      auth.py  eventos.py  inscripciones.py  asistencia.py  consolidado.py  extensiones.py  comun.py
   db/
     schema.sql         # creación de tablas, restricciones e índices
     seed.py            # datos de prueba ficticios (usuarios, eventos, participantes)
-  requirements.txt
+    preparar_demo.py   # evento en curso para demostrar la asistencia
+  tests/               # pruebas automatizadas
+  requirements.txt  requirements-dev.txt
 frontend/
-  index.html  evento.html  login.html  panel.html  asistencia.html  consolidado.html
+  index.html  evento.html  login.html  panel.html  asistencia.html  consolidado.html  constancia.html
   css/estilos.css
-  js/api.js  js/catalogo.js  js/evento.js  js/panel.js  js/asistencia.js  js/consolidado.js
+  js/api.js  js/sesion.js  js/comun.js  js/catalogo.js  js/evento.js  js/login.js  js/panel.js
+  js/asistencia.js  js/consolidado.js  js/constancia.js
 docs/  evidencias/  .env.example  README.md
 ```
 
@@ -138,7 +144,7 @@ erDiagram
 - **Cupos disponibles** no se guarda: se calcula como `cupo − inscripciones activas`, para que nunca se desincronice (CA-02, prueba 11).
 - **Asistencia "ausente" por defecto:** solo se guarda una fila cuando alguien la registra. Un inscrito sin fila cuenta como `ausente`. Una corrección de `presente` a `ausente` actualiza la misma fila.
 - **Estado `finalizado`:** antes de cada consulta o escritura relacionada con eventos, una función marca como `finalizado` los `publicado` cuyo `fin` ya pasó (RF-18). No requiere un proceso aparte.
-- **Participante reutilizable:** si el correo ya existe, se reutiliza el registro; si los datos difieren, se rechaza con conflicto para no sobrescribir datos de otra persona.
+- **Participante reutilizable:** si el correo **y** el documento coinciden con un registro, se reutiliza y conserva los datos guardados la primera vez; si solo uno de los dos coincide, se rechaza con conflicto para no mezclar identidades.
 - **Borrado:** no se borran inscripciones ni asistencias; cambian de estado. Los eventos no se borran, se cancelan.
 
 ## 4. Servicios web (API REST)
@@ -156,7 +162,7 @@ Prefijo `/api`. Formato JSON. Autenticación: cabecera `Authorization: Bearer <t
 | 7 | PATCH | `/eventos/{id}/estado` | Dueño o coordinación | Publicar o cancelar (`publicado`, `cancelado`) | 200 | RF-02, RF-03 |
 | 8 | POST | `/eventos/{id}/inscripciones` | Público | Inscripción del participante | 201 | RF-06, RF-08 |
 | 9 | POST | `/eventos/{id}/inscripciones/cancelar` | Público | Cancela la inscripción (correo + documento) | 200 | RF-09 |
-| 10 | GET | `/inscripciones?correo=&documento=` | Público | Consulta las inscripciones de un participante (exige ambos datos) | 200 | RF-07 |
+| 10 | POST | `/inscripciones/consultar` | Público | Consulta las inscripciones de un participante (exige ambos datos) | 200 | RF-07 |
 | 11 | GET | `/eventos/{id}/inscripciones` | Dueño o coordinación | Lista de inscritos con su asistencia | 200 | RF-07, RF-11 |
 | 12 | PATCH | `/inscripciones/{id}` | Dueño o coordinación | Cambia el estado de una inscripción una vez iniciado el evento | 200 | RF-09 |
 | 13 | POST | `/eventos/{id}/inscripciones/en-el-momento` | Dueño o coordinación | Inscribe y marca presente en un solo paso | 201 | RF-15 |
@@ -166,6 +172,12 @@ Prefijo `/api`. Formato JSON. Autenticación: cabecera `Authorization: Bearer <t
 | 17 | GET | `/organizadores` | Coordinación | Lista de organizadores para asignar al crear un evento | 200 | RF-01 |
 | 18 | GET | `/panel/eventos` | Personal | Eventos que gestiona el usuario, en cualquier estado (todos si es coordinación); filtro `estado` | 200 | RF-03, RF-13 |
 | 19 | GET | `/salud` | Público | Comprobación de que el servicio responde | 200 | - |
+| 20 | POST | `/constancias` | Público (correo y documento) | Constancias de asistencia de un participante | 200 | RF-19 |
+| 21 | GET | `/constancias/{codigo}` | Público | Verificar una constancia (documento enmascarado) | 200 | RF-19 |
+| 22 | GET | `/constancias/{codigo}/qr` | Público | QR con el enlace de verificación (SVG) | 200 | RF-20 |
+| 23 | GET | `/eventos/{id}/qr` | Público (publicados) | QR con el enlace al evento (SVG) | 200 | RF-20 |
+
+**Constancias (extensión):** solo si la inscripción está activa, la asistencia es `presente` y el evento está `finalizado`. El código `EA-{inscripción}-{firma}` usa un HMAC-SHA256 con `SECRET_KEY`; la verificación consulta la base, por lo que una corrección de la asistencia la invalida. No es una firma digital. Se piden por `POST` para que correo y documento no queden en la dirección.
 
 > Los endpoints 18 y 19 se añadieron al implementar: el panel necesita listar eventos en borrador, que el catálogo público no muestra.
 
@@ -236,25 +248,27 @@ Todos los errores usan la misma estructura y nunca incluyen rastros internos ni 
 | RN-06 Asistencia solo de inscritos | El endpoint 14 exige una inscripción `activa`; el 13 la crea en el mismo paso. |
 | RN-07 Propiedad | Dependencia de seguridad: coordinación pasa siempre; el organizador solo si `organizador_id` coincide, si no `403`. |
 | RN-08 Cupo ≥ inscritos | `reglas.py` al editar el evento. |
-| RN-09 Fechas y duración | Validación del modelo de entrada + `CHECK (fin > inicio)` en la base de datos. |
+| RN-09 Fechas y duración | Formato validado en el modelo de entrada; reglas en `reglas.validar_fechas`; `CHECK` de fin y duración en la base de datos. |
 | RN-10 Sin cruces de horario | Consulta de solapamiento (`inicio_A < fin_B` y `inicio_B < fin_A`) sobre las inscripciones activas del participante. |
-| RN-11 Ventanas de asistencia | Registro: desde `inicio` hasta `fin + 2 h`. Corrección: hasta `fin + 24 h`. Constantes en `config.py`. |
+| RN-11 Ventanas de asistencia | Registro: desde `inicio` hasta `fin + 2 h`. Corrección: hasta `fin + 24 h`; cerrado ese plazo tampoco se quitan inscripciones (`409 PLAZO_CERRADO`). Constantes en `config.py`. |
 | RN-12 Estados | Transiciones permitidas validadas en el endpoint 7; `finalizado` lo marca el sistema. |
 | RN-13 Cancelar evento | Al cancelar, sus inscripciones activas pasan a `cancelada_por_evento` en una sola transacción. |
 | RN-14 Token diario | El token lleva como caducidad la **próxima 00:00 de `America/Bogota`**. Al vencer se responde `401 TOKEN_EXPIRADO` y hay que iniciar sesión de nuevo. |
+| RN-15 Privacidad | Los endpoints públicos devuelven solo cifras; la lista de inscritos exige permiso sobre el evento. |
+| RN-16 Cambio de fechas | `reglas.editar_evento`: bloqueado con inscripciones activas, o en un evento publicado que ya inició. |
 
 ## 6. Control de acceso
 
 | Endpoint | Público | Organizador | Coordinación |
 |---|---|---|---|
-| 1, 3, 4*, 8, 9, 10 | Sí | Sí | Sí |
+| 1, 3, 4*, 8, 9, 10, 19 a 23 | Sí | Sí | Sí |
 | 2, 5, 17 | No | Sí (17 no) | Sí |
-| 6, 7, 11, 12, 13, 14, 15 | No | Solo sus eventos | Todos |
+| 6, 7, 11, 12, 13, 14, 15, 18 | No | Solo sus eventos | Todos |
 | 16 | No | No | Sí |
 
 \* El detalle de un evento en `borrador` o de otro organizador solo lo ve el personal con permiso. Para el público, un evento no publicado responde `404`, para no revelar su existencia.
 
-Los endpoints públicos de consulta de inscripciones (10) y cancelación (9) exigen **correo y documento** coincidentes, porque los participantes no tienen cuenta (RN-05). Si los datos no coinciden, la respuesta es la misma que si no existiera la inscripción, para no revelar si el correo está registrado.
+Los endpoints públicos de consulta de inscripciones (10) y cancelación (9) exigen **correo y documento** coincidentes, porque los participantes no tienen cuenta. Si los datos no coinciden, la respuesta es la misma que si no existiera la inscripción, para no revelar si el correo está registrado.
 
 **Medidas de seguridad implementadas**
 - **Contraseñas:** hash `scrypt` con sal aleatoria única; la base de datos rechaza valores que no tengan ese formato. Política: 10 a 128 caracteres, con al menos una letra y un número.
@@ -271,6 +285,7 @@ Los endpoints públicos de consulta de inscripciones (10) y cancelación (9) exi
 | Pantalla | Actor | Función |
 |---|---|---|
 | `index.html` Catálogo | Participante | Lista de eventos publicados con cupos; filtro por tipo y fecha. |
+| `constancia.html` (extensión) | Participante | Obtener, imprimir y verificar constancias de asistencia. |
 | `evento.html` Detalle | Participante | Datos del evento, cupos y formulario de inscripción; cancelar inscripción. |
 | `login.html` | Personal | Inicio de sesión. |
 | `panel.html` Panel | Personal | Mis eventos (o todos si es coordinación); crear, editar, publicar, cancelar. |
@@ -328,9 +343,9 @@ ASISTENCIA (personal)                          CONSOLIDADO (coordinación)
 
 ## 8. Configuración y datos de prueba
 
-- **`.env`** (local, nunca se sube): `SECRET_KEY`, `DATABASE_PATH`. **`.env.example`** con valores de ejemplo sin secretos.
-- **Base de datos:** `schema.sql` crea las tablas; `seed.py` carga usuarios (un organizador y una coordinación), participantes y eventos **ficticios**, para poder reproducir las pruebas en cualquier equipo.
-- **Ejecución:** instalar dependencias, crear la base con `seed.py` y arrancar `uvicorn`. Los comandos exactos se documentarán en el `README.md` al implementarlo.
+- **`.env`** (local, nunca se sube): `SECRET_KEY`, `DATABASE_PATH`, `SEED_PASSWORD`, `URL_PUBLICA`. **`.env.example`** con valores de ejemplo sin secretos.
+- **Base de datos:** `schema.sql` crea las tablas; `seed.py` carga usuarios (dos organizadores y la coordinación), participantes y eventos **ficticios**, para poder reproducir las pruebas en cualquier equipo.
+- **Ejecución:** instalar dependencias, crear la base con `seed.py` y arrancar `uvicorn`. Los comandos exactos están en el `README.md`.
 
 ## 9. Correspondencia con los requisitos
 
@@ -342,9 +357,11 @@ ASISTENCIA (personal)                          CONSOLIDADO (coordinación)
 | CA-04 | RF-08, RF-09 | 8, 9, 12 | detalle |
 | CA-05 | RF-07, RF-10, RF-11, RF-13, RF-15, RF-17 | 11, 13, 14, 15 | asistencia |
 | CA-06 | RF-12, RF-14, RF-16 | 16 | consolidado |
+| Extensiones | RF-19, RF-20 | 20 a 23 | constancia, detalle |
 
 ## 10. Decisiones abiertas y riesgos
 
-- **Compatibilidad de versiones:** se confirmará, al instalar, que `fastapi` y `uvicorn` funcionan con la versión de Python de ambos equipos. Si no, se fija una versión de Python compatible en el `README.md`.
+- **Compatibilidad de versiones:** verificada con Python 3.14 mediante una instalación desde cero. Las versiones de las dependencias están fijadas en `requirements.txt`. Falta confirmarlo en el segundo equipo.
+- **Interfaz en celular:** las tablas del personal requieren desplazamiento horizontal.
 - **Seguridad del participante sin cuenta:** correo + documento es una verificación débil, aceptable para este proyecto académico. En producción haría falta una verificación por correo.
 - **Cambios de los requisitos:** si el docente modifica reglas, se actualizan `requisitos.md`, este documento y la matriz de trazabilidad.

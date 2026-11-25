@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config, db
 from .errores import registrar_manejadores
-from .routers import asistencia, auth, consolidado, eventos, inscripciones
+from .routers import asistencia, auth, consolidado, eventos, extensiones, inscripciones
 
 _RUTAS_DOCUMENTACION = ("/docs", "/redoc", "/openapi.json")
 
@@ -46,7 +46,7 @@ def crear_app() -> FastAPI:
     def salud():
         return {"estado": "ok"}
 
-    for modulo in (auth, eventos, inscripciones, asistencia, consolidado):
+    for modulo in (auth, eventos, inscripciones, asistencia, consolidado, extensiones):
         app.include_router(modulo.router, prefix="/api")
 
     if config.FRONTEND_DIR.is_dir():  # se monta al final para no tapar la API

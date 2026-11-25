@@ -12,7 +12,9 @@
 
 La aplicación permite a una institución educativa **crear y publicar actividades académicas, consultarlas, inscribir participantes, controlar cupos y registrar asistencia**, con información consolidada para la coordinación.
 
-**Fuera de alcance** (según la guía): pasarelas de pago, videoconferencias, SMS/WhatsApp, certificados firmados, integración con sistemas institucionales y lectura de QR.
+**Fuera de alcance** (según la guía): pasarelas de pago, videoconferencias, SMS/WhatsApp, certificados firmados digitalmente, integración con sistemas institucionales y lectura de QR dentro de la aplicación.
+
+**Extensiones incluidas** (la guía las menciona como posibles; no sustituyen el proceso mínimo): constancia de asistencia imprimible **sin firma digital** (RF-19) y **generación** de códigos QR (RF-20), que se leen con la cámara del celular.
 
 **Mejoras futuras** (fuera del alcance actual): lista de espera cuando el cupo se agota, estados de asistencia adicionales (tardanza, excusa) e interfaz en inglés.
 
@@ -55,7 +57,7 @@ Estado: `Respondida` = respuesta del autor, pendiente de confirmación del docen
 | I1 | ¿Quién puede inscribirse? ¿Se requiere cuenta? | Cualquier miembro de la comunidad (estudiante, docente o externo; el rol es un dato). Sin cuentas de participante: formulario de datos básicos sin contraseña. | Respondida |
 | I2 | ¿Qué datos del participante se piden? | Obligatorios: nombre completo, correo, documento de identidad, rol. Opcional: programa académico. El participante se guarda una sola vez, identificado por su correo, y se reutiliza. Datos de prueba ficticios. | Respondida |
 | I3 | ¿Puede inscribirse dos veces al mismo evento? ¿Cómo se identifica a la persona? | No: una inscripción activa por evento. Se identifica por correo único, normalizado (minúsculas, sin espacios). Si la anterior fue cancelada, puede volver a inscribirse. El duplicado se rechaza con HTTP 409 sin alterar datos. | Respondida |
-| I4 | ¿Se puede cancelar una inscripción? ¿Hasta cuándo? ¿Libera el cupo? | Sí, mientras el evento no haya iniciado; libera el cupo; no se borra, pasa a `cancelada`. Iniciado el evento, solo el organizador o la coordinación cambian el estado de una inscripción. El participante se identifica con correo y documento. | Respondida |
+| I4 | ¿Se puede cancelar una inscripción? ¿Hasta cuándo? ¿Libera el cupo? | Sí, mientras el evento no haya iniciado; libera el cupo; no se borra, pasa a `cancelada`. Iniciado el evento, solo el organizador o la coordinación cambian el estado de una inscripción, y únicamente hasta el cierre del plazo de corrección de asistencia (RN-11). El participante se identifica con correo y documento. | Respondida |
 | I5 | Con cupo agotado, ¿se rechaza o hay lista de espera? | Se rechaza con HTTP 409 ("cupo agotado"), sin lista de espera (mejora futura). La verificación del cupo y el guardado de la inscripción son una sola operación atómica (transacción). | Respondida |
 | I6 | ¿Hay fecha límite de inscripción? ¿Se puede inscribir a un evento iniciado o finalizado? | Sin fecha límite propia: las inscripciones cierran cuando el evento inicia. Solo en eventos `publicado` que no han empezado; `borrador`, `cancelado` y `finalizado` las rechazan (HTTP 409 o 422). | Respondida |
 | I7 | ¿Se impide inscribirse a dos eventos que se crucen en horario? | Sí. Hay solapamiento si `inicio_A < fin_B` y `inicio_B < fin_A`; si uno termina justo cuando empieza el otro, no hay conflicto. Se rechaza con HTTP 409 indicando con qué evento se cruza. | Respondida |
@@ -65,7 +67,7 @@ Estado: `Respondida` = respuesta del autor, pendiente de confirmación del docen
 |---|---|---|---|
 | A1 | ¿Quién registra la asistencia y cuándo? | El organizador del evento o la coordinación; el participante no puede marcar la suya. Desde el inicio del evento hasta 2 horas después de su fin. Por participante inscrito, uno a uno o en lote. Solo en eventos `publicado` o `finalizado`. | Respondida |
 | A2 | ¿Solo presente/ausente o hay más estados? | Solo `presente` y `ausente`. Al abrirse la ventana, los inscritos activos quedan `ausente` por defecto. Un cambio a `presente` guarda fecha, hora y quién lo hizo. Tardanza y excusa son mejora futura. | Respondida |
-| A3 | ¿Se puede registrar asistencia de alguien no inscrito? | Solo con inscripción activa, salvo la **inscripción en el momento**: el organizador o la coordinación pueden inscribir a una persona y marcar su asistencia en un solo paso, si el evento está `publicado`, ya inició, no ha terminado y hay cupo. Aplican las mismas reglas de cupo, duplicados y cruce de horarios. Si es una persona nueva, se crea su registro con los datos mínimos. En cualquier otro caso se rechaza con HTTP 422. | Respondida |
+| A3 | ¿Se puede registrar asistencia de alguien no inscrito? | Solo con inscripción activa, salvo la **inscripción en el momento**: el organizador o la coordinación pueden inscribir a una persona y marcar su asistencia en un solo paso, si el evento está `publicado`, ya inició, no ha terminado y hay cupo. Aplican las mismas reglas de cupo, duplicados y cruce de horarios. Si es una persona nueva, se crea su registro con los datos mínimos. En cualquier otro caso se rechaza (HTTP 409 si choca con el estado del evento, el cupo o una inscripción existente; 422 si la persona no tiene inscripción activa o el plazo no está abierto). | Respondida |
 | A4 | ¿Se puede corregir una asistencia ya registrada? | Sí, cambiar entre `presente` y `ausente` hasta 24 horas después del fin del evento; luego queda cerrada. Se guarda quién y cuándo hizo el último cambio, sin historial completo. | Respondida |
 
 ### 3.4 Usuarios, permisos y reportes
@@ -90,11 +92,12 @@ Estado: `Respondida` = respuesta del autor, pendiente de confirmación del docen
 | RN-08 | El cupo de un evento no puede reducirse por debajo de sus inscritos activos. | [SUPUESTO] |
 | RN-09 | El inicio debe ser posterior al momento actual, el fin posterior al inicio, y la duración máxima es de 8 horas. | [SUPUESTO] |
 | RN-10 | Un participante no puede tener dos inscripciones activas en eventos con horarios solapados. | [SUPUESTO] |
-| RN-11 | La asistencia se registra desde el inicio del evento hasta 2 horas después de su fin, y se corrige hasta 24 horas después del fin. | [SUPUESTO] |
+| RN-11 | La asistencia se registra desde el inicio del evento hasta 2 horas después de su fin, y se corrige hasta 24 horas después del fin. Cerrado ese plazo, tampoco se pueden quitar inscripciones. | [SUPUESTO] |
 | RN-12 | Estados de evento: `borrador`, `publicado`, `cancelado` y `finalizado` (este último lo asigna el sistema al pasar la fecha de fin). | [SUPUESTO] |
 | RN-13 | Cancelar un evento conserva sus inscripciones con estado `cancelada_por_evento`. | [SUPUESTO] |
 | RN-14 | Los tokens de sesión expiran cada día a las 00:00, hora de Colombia. | [SUPUESTO] |
 | RN-15 | El público solo ve cifras de inscripción (inscritos y cupos). Los datos de los inscritos (nombre, correo, documento) solo los ve el personal autorizado: el organizador del evento o la coordinación. | [SUPUESTO] |
+| RN-16 | Las fechas de un evento no se pueden cambiar si tiene inscripciones activas o si está publicado y ya inició. Un borrador cuya fecha pasó puede reprogramarse con una fecha futura. | [SUPUESTO] |
 
 ## 5. Requisitos funcionales
 
@@ -120,6 +123,8 @@ Prioridad MoSCoW: **M** debe, **S** debería, **C** podría.
 | RF-16 | Iniciar sesión con correo y contraseña (organizador y coordinación), con expiración diaria del token. | M | CA-01, CA-05, CA-06 |
 | RF-17 | Corregir una asistencia ya registrada dentro del plazo permitido. | M | CA-05 |
 | RF-18 | Marcar automáticamente como `finalizado` los eventos cuya fecha de fin ya pasó. | S | CA-02, CA-06 |
+| RF-19 | Emitir y verificar constancias de asistencia para quien tenga inscripción activa, asistencia `presente` y evento finalizado (extensión). | C | CA-05 |
+| RF-20 | Generar códigos QR con el enlace de un evento publicado y de verificación de una constancia (extensión). | C | CA-02 |
 
 ## 6. Requisitos no funcionales
 
@@ -181,10 +186,10 @@ Como organizador o coordinación, quiero inscribir a una persona que llega sin i
 | Condición | Requisitos | Historias |
 |---|---|---|
 | CA-01 | RF-01, RF-02, RF-03, RF-13, RF-16 | HU-01 |
-| CA-02 | RF-04, RF-05, RF-18 | HU-02 |
+| CA-02 | RF-04, RF-05, RF-18, RF-20 | HU-02 |
 | CA-03 | RF-06, RF-07, RF-15 | HU-03, HU-07 |
 | CA-04 | RF-08, RF-09 | HU-04 |
-| CA-05 | RF-07, RF-10, RF-11, RF-13, RF-15, RF-17 | HU-05, HU-07 |
+| CA-05 | RF-07, RF-10, RF-11, RF-13, RF-15, RF-17, RF-19 | HU-05, HU-07 |
 | CA-06 | RF-12, RF-14, RF-16, RF-18 | HU-06 |
 
 ## 9. Registro de decisiones y pendientes
@@ -194,5 +199,7 @@ Como organizador o coordinación, quiero inscribir a una persona que llega sin i
 | 2026-11-23 | E1-E5 e I1 respondidas por el autor (sin sesión con el docente). | Autor |
 | 2026-11-24 | I2-I7, A1-A4 y U1-U4 respondidas por el autor. Cambios respecto a la propuesta inicial: duración máxima de 8 horas; registro de asistencia hasta 2 horas tras el fin y corrección hasta 24 horas; inscripción en el momento permitida; token que expira a medianoche; la coordinación tiene los permisos del organizador sobre todos los eventos, incluida la creación; interfaz en inglés como mejora futura. | Autor |
 | 2026-11-24 | El detalle público no muestra quiénes se inscribieron (solo cifras); el personal con permiso accede a la lista desde el detalle (RN-15). Se descartó publicar nombres por privacidad: los participantes no tienen cuenta ni autorización. | Autor |
+| 2026-11-25 | Se incorporan dos extensiones: constancia de asistencia sin firma digital (RF-19) y generación de códigos QR (RF-20). | Autor |
+| 2026-11-25 | Cerrado el plazo de corrección no se quitan inscripciones (RN-11). La consulta de inscripciones se hace por POST para no dejar correo y documento en la dirección. | Autor |
 
 **Pendiente:** confirmar con el docente las respuestas (todas son supuestos) y obtener la aprobación del alcance, las reglas de negocio (sección 4) y las prioridades (sección 5).
