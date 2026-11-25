@@ -77,3 +77,22 @@ img.portada{max-width:100%;max-height:260px;border-radius:8px;margin:8px 0}
 .invisible{display:none !important}
 .nota-fecha{font-weight:400;color:var(--suave);font-size:.78rem}
 .campo-completo{grid-column:1/-1}
+
+/* ---- Extensiones: QR y constancia ---- */
+.compartir{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:20px;padding-top:16px;border-top:1px solid var(--borde)}
+.compartir img{border:1px solid var(--borde);border-radius:8px}
+.compartir > div{flex:1;min-width:180px}
+.constancia{margin-top:24px;text-align:center;border:3px double var(--primario);padding:32px}
+.constancia h2{font-size:1.7rem;margin:4px 0 16px}
+.constancia-marca{color:var(--primario);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.85rem;margin:0}
+.constancia-nombre{font-size:1.5rem;font-weight:700;margin:8px 0}
+.constancia-evento{font-size:1.2rem;font-weight:600}
+.constancia-pie{display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;text-align:left;margin-top:20px}
+.constancia-pie p{margin:4px 0;overflow-wrap:anywhere}
+@media print{
+  header,.no-imprimir{display:none !important}
+  body{background:#fff}
+  main{max-width:none;padding:0}
+  body.imprimiendo .constancia:not(.para-imprimir){display:none}
+  .constancia{box-shadow:none;margin:0;break-inside:avoid}
+}

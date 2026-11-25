@@ -4,7 +4,8 @@ import re
 
 from app import config
 
-PAGINAS = ["index.html", "evento.html", "login.html", "panel.html", "asistencia.html", "consolidado.html"]
+PAGINAS = ["index.html", "evento.html", "login.html", "panel.html", "asistencia.html", "consolidado.html",
+           "constancia.html"]
 
 
 def leer(ruta):
