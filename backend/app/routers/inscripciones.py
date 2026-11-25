@@ -3,9 +3,8 @@ from typing import Literal
 from fastapi import APIRouter, Depends
 
 from .. import auth, reglas
-from ..schemas import (CancelarInscripcionIn, InscripcionEstadoIn, ParticipanteIn, normalizar_correo,
-                       normalizar_documento)
-from .comun import IdPath, normalizar_consulta
+from ..schemas import CancelarInscripcionIn, IdentificacionIn, InscripcionEstadoIn, ParticipanteIn
+from .comun import IdPath
 
 router = APIRouter(tags=["Inscripciones"])
 
@@ -32,10 +31,10 @@ def inscritos(evento_id: IdPath, estado: Literal["activa", "cancelada", "cancela
     return reglas.listar_inscritos(usuario, evento_id, estado)
 
 
-@router.get("/inscripciones", summary="Consultar las inscripciones de un participante")
-def consultar(correo: str, documento: str):
-    return reglas.consultar_inscripciones(normalizar_consulta(normalizar_correo, correo, "correo"),
-                                          normalizar_consulta(normalizar_documento, documento, "documento"))
+@router.post("/inscripciones/consultar", summary="Consultar las inscripciones de un participante")
+def consultar(datos: IdentificacionIn):
+    # POST: el correo y el documento viajan en el cuerpo y no quedan en la dirección ni en los registros
+    return reglas.consultar_inscripciones(datos.correo, datos.documento)
 
 
 @router.patch("/inscripciones/{inscripcion_id}", summary="Cancelar una inscripción (personal)")

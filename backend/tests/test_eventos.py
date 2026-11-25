@@ -214,6 +214,21 @@ def test_cambio_de_fechas(cliente, org, reloj):
     assert cliente.put(url, json={"lugar": "Otro salón"}, headers=org["headers"]).status_code == 200  # lo demás sí
 
 
+def test_un_borrador_vencido_se_puede_reprogramar_y_publicar(cliente, org, reloj):
+    ev = evento_en(cliente, org["headers"], desde=timedelta(hours=2), publicado=False)
+    reloj.avanzar(hours=5)                                                     # la fecha pasó sin publicarlo
+    url = f"/api/eventos/{ev['id']}"
+    r = cliente.patch(f"{url}/estado", json={"estado": "publicado"}, headers=org["headers"])
+    assert r.status_code == 422 and codigo(r) == "FECHA_EN_PASADO"
+    pasado = tiempo.ahora() - timedelta(hours=1)
+    r = cliente.put(url, json={"inicio": iso(pasado), "fin": iso(pasado + timedelta(hours=2))}, headers=org["headers"])
+    assert r.status_code == 422 and codigo(r) == "FECHA_EN_PASADO"            # no a otra fecha pasada
+    nuevo = tiempo.ahora() + timedelta(days=1)
+    r = cliente.put(url, json={"inicio": iso(nuevo), "fin": iso(nuevo + timedelta(hours=2))}, headers=org["headers"])
+    assert r.status_code == 200
+    assert publicar(cliente, org["headers"], ev["id"])["estado"] == "publicado"
+
+
 def test_no_se_edita_un_evento_cancelado_o_finalizado(cliente, org, reloj):
     cancelado = evento_publicado(cliente, org["headers"], titulo="Evento A cancelar")
     cliente.patch(f"/api/eventos/{cancelado['id']}/estado", json={"estado": "cancelado"}, headers=org["headers"])
