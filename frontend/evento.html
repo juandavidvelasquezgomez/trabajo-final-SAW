@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detalle del evento</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header id="encabezado"></header>
+  <main>
+    <p><a href="index.html">← Volver al catálogo</a></p>
+    <div id="mensaje-evento"></div>
+    <div id="contenido" class="dos invisible">
+      <div class="card" id="detalle"></div>
+      <div>
+        <div class="card">
+          <h2 style="margin-top:0;font-size:1.15rem">Inscríbete</h2>
+          <div id="aviso-inscripcion"></div>
+          <form id="form-inscripcion" style="display:grid;gap:12px" novalidate>
+            <div><label for="i-nombre">Nombre completo</label><input id="i-nombre" name="nombre_completo" required minlength="3" maxlength="100" autocomplete="name"></div>
+            <div><label for="i-correo">Correo electrónico</label><input id="i-correo" name="correo" type="email" required maxlength="254" autocomplete="email"></div>
+            <div class="grid2">
+              <div><label for="i-documento">Documento</label><input id="i-documento" name="documento" required minlength="5" maxlength="20" inputmode="text"></div>
+              <div><label for="i-rol">Rol</label>
+                <select id="i-rol" name="rol" required>
+                  <option value="estudiante">Estudiante</option>
+                  <option value="docente">Docente</option>
+                  <option value="externo">Externo</option>
+                </select></div>
+            </div>
+            <div><label for="i-programa">Programa académico (opcional)</label><input id="i-programa" name="programa" maxlength="100"></div>
+            <button class="btn" type="submit" id="btn-inscribir">Inscribirme</button>
+          </form>
+          <p class="nota">No necesitas crear una cuenta. Tus datos se usan solo para esta actividad.</p>
+          <div id="msg-inscripcion"></div>
+        </div>
+        <div class="card" style="margin-top:16px">
+          <h2 style="margin-top:0;font-size:1.05rem">¿Ya te inscribiste? Cancela tu inscripción</h2>
+          <form id="form-cancelar" novalidate>
+            <div class="grid2">
+              <div><label for="c-correo">Correo</label><input id="c-correo" name="correo" type="email" required maxlength="254"></div>
+              <div><label for="c-documento">Documento</label><input id="c-documento" name="documento" required maxlength="20"></div>
+            </div>
+            <p style="margin:12px 0 0"><button class="btn peligro" type="submit">Cancelar mi inscripción</button></p>
+          </form>
+          <div id="msg-cancelar"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script type="module" src="js/evento.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ingresar · Eventos académicos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header id="encabezado"></header>
+  <main>
+    <div class="card login">
+      <h1>Ingresar</h1>
+      <p class="sub">Acceso para organizadores y coordinación.</p>
+      <div id="aviso"></div>
+      <form id="form-login" style="display:grid;gap:12px" novalidate>
+        <div><label for="l-correo">Correo</label><input id="l-correo" name="correo" type="email" required maxlength="254" autocomplete="username"></div>
+        <div><label for="l-password">Contraseña</label><input id="l-password" name="password" type="password" required maxlength="128" autocomplete="current-password"></div>
+        <button class="btn" type="submit" id="btn-login">Ingresar</button>
+      </form>
+      <div id="mensaje"></div>
+      <p class="nota">La sesión vence todos los días a las 00:00 (hora de Colombia).</p>
+    </div>
+  </main>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>

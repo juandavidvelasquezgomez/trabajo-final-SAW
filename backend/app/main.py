@@ -32,6 +32,10 @@ def crear_app() -> FastAPI:
         respuesta.headers["Referrer-Policy"] = "no-referrer"
         if request.url.path.startswith("/api"):
             respuesta.headers["Cache-Control"] = "no-store"
+        elif not request.url.path.startswith(_RUTAS_DOCUMENTACION):
+            # Páginas y scripts: el navegador debe revalidar siempre (usa ETag, así que es barato).
+            # Sin esto, conserva copias viejas y no muestra los cambios al recargar.
+            respuesta.headers["Cache-Control"] = "no-cache"
         if not request.url.path.startswith(_RUTAS_DOCUMENTACION):  # /docs carga recursos de un CDN
             respuesta.headers["Content-Security-Policy"] = (
                 "default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; "

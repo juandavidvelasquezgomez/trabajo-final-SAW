@@ -320,6 +320,12 @@ ASISTENCIA (personal)                          CONSOLIDADO (coordinación)
 - **Fechas pasadas = historial:** solo se consultan. Los filtros del catálogo, del panel y del consolidado no tienen esa restricción, y los eventos finalizados siguen visibles para el personal.
 - **Es una ayuda de la interfaz, no la defensa:** un selector se puede saltar (escribiendo la fecha o llamando a la API directamente). La regla real la aplica el servidor (RN-09: `FECHA_EN_PASADO`, `DURACION_EXCEDIDA`).
 
+### 7.5 Privacidad de los inscritos
+
+- **El detalle público muestra solo cifras** ("6 inscritos · 24 cupos de 30"), nunca nombres, correos ni documentos. Los participantes no tienen cuenta ni dieron permiso para que sus datos se publiquen (RN-15).
+- **El personal con permiso** (el organizador del evento o la coordinación) ve en el detalle un botón "Ver inscritos y asistencia" que lleva a la lista. El botón es una comodidad: la lista la protege la API (`401` sin sesión, `403` si el evento es de otro organizador).
+- **No se publica una lista de asistentes.** Si en el futuro se quisiera, tendría que ser opcional y con autorización expresa de cada persona al inscribirse, y requeriría confirmar el cambio de requisitos con el docente.
+
 ## 8. Configuración y datos de prueba
 
 - **`.env`** (local, nunca se sube): `SECRET_KEY`, `DATABASE_PATH`. **`.env.example`** con valores de ejemplo sin secretos.

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Panel de eventos · Eventos académicos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header id="encabezado"></header>
+  <main>
+    <div class="fila">
+      <div><h1>Panel de eventos</h1><p class="sub" id="subtitulo"></p></div>
+      <button class="btn" type="button" id="btn-nuevo">+ Nuevo evento</button>
+    </div>
+    <div class="card filtros" style="padding:14px">
+      <div class="campo"><label for="f-estado">Estado</label>
+        <select id="f-estado">
+          <option value="">Todos</option>
+          <option value="borrador">Borrador</option>
+          <option value="publicado">Publicado</option>
+          <option value="finalizado">Finalizado</option>
+          <option value="cancelado">Cancelado</option>
+        </select></div>
+    </div>
+    <div id="msg-panel"></div>
+    <div class="card tabla-envoltura" style="padding:0">
+      <table>
+        <thead><tr><th>Evento</th><th>Fecha</th><th>Estado</th><th>Inscritos</th><th id="th-organizador" class="invisible">Organizador</th><th>Acciones</th></tr></thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+
+    <h2 id="titulo-form" style="font-size:1.15rem;margin-top:28px">Nuevo evento</h2>
+    <form id="form-evento" class="card" novalidate>
+      <div class="grid2">
+        <div><label for="ev-titulo">Título *</label><input id="ev-titulo" name="titulo" required minlength="3" maxlength="150"></div>
+        <div><label for="ev-tipo">Tipo *</label>
+          <select id="ev-tipo" name="tipo" required>
+            <option value="">Selecciona…</option>
+            <option value="conferencia">Conferencia</option>
+            <option value="taller">Taller</option>
+            <option value="seminario">Seminario</option>
+            <option value="capacitacion">Capacitación</option>
+          </select></div>
+        <div><label for="ev-inicio">Inicio * <span class="nota-fecha">(desde ahora en adelante)</span></label><input type="datetime-local" id="ev-inicio" name="inicio" required></div>
+        <div><label for="ev-fin">Fin * <span class="nota-fecha">(máx. 8 horas después del inicio)</span></label><input type="datetime-local" id="ev-fin" name="fin" required disabled></div>
+        <div><label for="ev-lugar">Lugar o enlace *</label><input id="ev-lugar" name="lugar" required minlength="2" maxlength="200"></div>
+        <div><label for="ev-cupo">Cupo máximo *</label><input type="number" id="ev-cupo" name="cupo" required min="1" max="10000" step="1"></div>
+        <div id="campo-organizador" class="campo-completo invisible"><label for="ev-organizador">Organizador responsable</label><select id="ev-organizador" name="organizador_id"></select></div>
+        <div class="campo-completo"><label for="ev-imagen">Imagen (dirección https, opcional)</label><input id="ev-imagen" name="imagen_url" maxlength="500" placeholder="https://"></div>
+        <div class="campo-completo"><label for="ev-descripcion">Descripción</label><textarea id="ev-descripcion" name="descripcion" rows="3" maxlength="2000"></textarea></div>
+      </div>
+      <p class="acciones" style="margin:16px 0 0">
+        <button class="btn" type="submit" id="btn-guardar">Guardar borrador</button>
+        <button class="btn sec" type="button" id="btn-publicar">Guardar y publicar</button>
+        <button class="btn sec invisible" type="button" id="btn-cancelar-edicion">Cancelar edición</button>
+      </p>
+      <div id="msg-form"></div>
+    </form>
+  </main>
+  <script type="module" src="js/panel.js"></script>
+</body>
+</html>

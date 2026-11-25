@@ -18,7 +18,8 @@ Asignatura: Aplicaciones y Servicios Web - Tecnología en Desarrollo de Software
 
 ## Estado
 - Backend (API REST + base de datos SQLite): implementado y probado. Ver `backend/`.
-- Frontend: pendiente (el prototipo visual ya está aprobado).
+- Frontend (HTML, CSS y JavaScript puro): implementado, en `frontend/`, y verificado en el navegador con el backend real.
+- Pendiente: documentar las 12 pruebas funcionales con evidencias, la matriz de trazabilidad y completar este informe.
 
 ## Configuración del entorno (backend)
 Requisitos: Python 3.12 o superior (probado con 3.14). Comandos en PowerShell, desde la raíz del repositorio:
@@ -45,6 +46,7 @@ Cargar datos de prueba ficticios y arrancar la API:
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --reload
 ```
 
+- Aplicación web: http://127.0.0.1:8000/ (el mismo servidor entrega la API y las páginas).
 - Documentación interactiva de la API: http://127.0.0.1:8000/docs
 - Cuentas de prueba (todas con la contraseña de `SEED_PASSWORD`): `coordinacion@ejemplo.test`, `ana.torres@ejemplo.test` y `luis.mora@ejemplo.test`.
 

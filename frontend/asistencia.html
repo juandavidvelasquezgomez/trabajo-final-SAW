@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Asistencia · Eventos académicos</title>
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <header id="encabezado"></header>
+  <main>
+    <p><a href="panel.html">← Volver al panel</a></p>
+    <div id="msg-pagina"></div>
+    <div id="contenido" class="invisible">
+      <h1 id="titulo"></h1>
+      <p class="sub" id="subtitulo"></p>
+      <div id="banner" class="banner"></div>
+      <div class="fila" style="margin-bottom:12px">
+        <span class="meta" id="resumen"></span>
+        <span class="acciones">
+          <button class="btn sec" type="button" id="btn-todos">Marcar todos presentes</button>
+          <button class="btn" type="button" id="btn-momento">+ Inscribir en el momento</button>
+        </span>
+      </div>
+      <div id="msg-asistencia"></div>
+      <div class="card tabla-envoltura" style="padding:0">
+        <table>
+          <thead><tr><th>Participante</th><th>Correo</th><th>Rol</th><th>Asistencia</th><th></th></tr></thead>
+          <tbody id="lista"></tbody>
+        </table>
+      </div>
+      <form id="form-momento" class="card invisible" style="margin-top:16px" novalidate>
+        <h2 style="margin-top:0;font-size:1.05rem">Inscribir en el momento</h2>
+        <div class="grid2">
+          <div><label for="m-nombre">Nombre completo</label><input id="m-nombre" name="nombre_completo" required minlength="3" maxlength="100"></div>
+          <div><label for="m-correo">Correo</label><input id="m-correo" name="correo" type="email" required maxlength="254"></div>
+          <div><label for="m-documento">Documento</label><input id="m-documento" name="documento" required minlength="5" maxlength="20"></div>
+          <div><label for="m-rol">Rol</label>
+            <select id="m-rol" name="rol" required>
+              <option value="estudiante">Estudiante</option>
+              <option value="docente">Docente</option>
+              <option value="externo">Externo</option>
+            </select></div>
+        </div>
+        <p style="margin:12px 0 0"><button class="btn" type="submit">Inscribir y marcar presente</button></p>
+        <p class="nota">Se aplican las mismas reglas de cupo, duplicados y cruce de horarios.</p>
+        <div id="msg-momento"></div>
+      </form>
+    </div>
+  </main>
+  <script type="module" src="js/asistencia.js"></script>
+</body>
+</html>

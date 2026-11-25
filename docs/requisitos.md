@@ -94,6 +94,7 @@ Estado: `Respondida` = respuesta del autor, pendiente de confirmación del docen
 | RN-12 | Estados de evento: `borrador`, `publicado`, `cancelado` y `finalizado` (este último lo asigna el sistema al pasar la fecha de fin). | [SUPUESTO] |
 | RN-13 | Cancelar un evento conserva sus inscripciones con estado `cancelada_por_evento`. | [SUPUESTO] |
 | RN-14 | Los tokens de sesión expiran cada día a las 00:00, hora de Colombia. | [SUPUESTO] |
+| RN-15 | El público solo ve cifras de inscripción (inscritos y cupos). Los datos de los inscritos (nombre, correo, documento) solo los ve el personal autorizado: el organizador del evento o la coordinación. | [SUPUESTO] |
 
 ## 5. Requisitos funcionales
 
@@ -192,5 +193,6 @@ Como organizador o coordinación, quiero inscribir a una persona que llega sin i
 |---|---|---|
 | 2026-11-23 | E1-E5 e I1 respondidas por el autor (sin sesión con el docente). | Autor |
 | 2026-11-24 | I2-I7, A1-A4 y U1-U4 respondidas por el autor. Cambios respecto a la propuesta inicial: duración máxima de 8 horas; registro de asistencia hasta 2 horas tras el fin y corrección hasta 24 horas; inscripción en el momento permitida; token que expira a medianoche; la coordinación tiene los permisos del organizador sobre todos los eventos, incluida la creación; interfaz en inglés como mejora futura. | Autor |
+| 2026-11-24 | El detalle público no muestra quiénes se inscribieron (solo cifras); el personal con permiso accede a la lista desde el detalle (RN-15). Se descartó publicar nombres por privacidad: los participantes no tienen cuenta ni autorización. | Autor |
 
 **Pendiente:** confirmar con el docente las respuestas (todas son supuestos) y obtener la aprobación del alcance, las reglas de negocio (sección 4) y las prioridades (sección 5).
